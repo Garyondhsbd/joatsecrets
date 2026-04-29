@@ -1,0 +1,38 @@
+[
+  {
+    "id": "JS-001",
+    "name": "Premium Activewear",
+    "size": "Large",
+    "tier": "1 (SUPPLIER VERIFIED)",
+    "price": 120,
+    "stock": 7,
+    "image": "/products/joat-activewear.jpg"
+  },
+  {
+    "id": "JS-002",
+    "name": "Crimson Runner",
+    "size": "US 10",
+    "tier": "1 (SUPPLIER VERIFIED)",
+    "price": 185,
+    "stock": 4,
+    "image": "/products/joat-sneakers.jpg"
+  },
+  {
+    "id": "JS-003",
+    "name": "Tactical Crossbody",
+    "size": "OS",
+    "tier": "2 (WAREHOUSE PULLED)",
+    "price": 95,
+    "stock": 11,
+    "image": "/products/joat-crossbody.jpg"
+  },
+  {
+    "id": "JS-004",
+    "name": "Blackout Puffer",
+    "size": "Medium",
+    "tier": "1 (SUPPLIER VERIFIED)",
+    "price": 210,
+    "stock": 3,
+    "image": "/products/joat-puffer.jpg"
+  }
+]

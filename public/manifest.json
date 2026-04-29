@@ -1,0 +1,18 @@
+{
+  "name": "JOAT Secrets Vault",
+  "short_name": "JOAT Vault",
+  "description": "Restricted logistics vault for JOAT Secrets drops.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#000000",
+  "theme_color": "#990000",
+  "icons": [
+    {
+      "src": "/joat-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
