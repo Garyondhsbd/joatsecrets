@@ -190,6 +190,8 @@ function VaultHub({
 }) {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 900], [0, -160]);
+  const scentVault = products.filter((product) => product.category === "Scent Vault");
+  const apparelVault = products.filter((product) => product.category !== "Scent Vault");
 
   return (
     <motion.section
@@ -222,10 +224,22 @@ function VaultHub({
           viewport={{ once: true, margin: "-80px" }}
           className="relative mx-auto grid max-w-7xl grid-cols-2 gap-3 px-3 py-10 sm:gap-5 sm:px-5 lg:grid-cols-4"
         >
-          {products.map((product) => (
+          {apparelVault.map((product) => (
             <ProductCard key={product.id} product={product} onAdd={addToDrop} />
           ))}
         </motion.div>
+        <section className="relative border-y border-vault-crimson bg-background/80 py-8 shadow-vault-glow">
+          <div className="mx-auto max-w-7xl px-3 sm:px-5">
+            <h2 className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl" data-text="SCENT VAULT">
+              SCENT VAULT
+            </h2>
+            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {scentVault.map((product) => (
+                <ProductCard key={product.id} product={product} onAdd={addToDrop} />
+              ))}
+            </div>
+          </div>
+        </section>
       </section>
     </motion.section>
   );
@@ -299,7 +313,7 @@ function ProductCard({
     <motion.article
       variants={lockIn}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="group overflow-hidden border border-border bg-vault-concrete vault-concrete distressed-card"
+      className="distressed-card group relative overflow-hidden border border-border bg-vault-concrete vault-concrete"
     >
       <div className="relative aspect-square overflow-hidden bg-background">
         <img
