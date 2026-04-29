@@ -363,7 +363,7 @@ function ProductCard({
 
 function CartDrawer(props: {
   open: boolean;
-  cart: Product[];
+  cart: CartItem[];
   total: number;
   stage: OrderStage;
   details: OrderDetails;
@@ -388,9 +388,11 @@ function CartDrawer(props: {
   const telegramMessage = useMemo(
     () =>
       encodeURIComponent(
-        `JOAT DROP HANDOFF\nOrder: ${orderId}\nTotal: $${total}\nTelegram: ${details.telegram}`,
+        `JOAT DROP HANDOFF\nOrder: ${orderId}\nItems:\n${cart
+          .map((item) => `${item.name} / ${item.selectedColor} / ${item.selectedSize}`)
+          .join("\n")}\nTotal: $${total}\nTelegram: ${details.telegram}`,
       ),
-    [details.telegram, orderId, total],
+    [cart, details.telegram, orderId, total],
   );
 
   return (
@@ -446,7 +448,7 @@ function CartList({
   total,
   onSecure,
 }: {
-  cart: Product[];
+  cart: CartItem[];
   total: number;
   onSecure: () => void;
 }) {
@@ -461,7 +463,7 @@ function CartList({
             className="flex justify-between border-b border-border pb-3 font-mono text-sm uppercase"
           >
             <span>
-              {item.id} // {item.name}
+              {item.id} // {item.name} // {item.selectedColor} // {item.selectedSize}
             </span>
             <span className="text-vault-crimson">${item.price}</span>
           </div>
