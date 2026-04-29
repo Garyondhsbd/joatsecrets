@@ -176,9 +176,9 @@ function VaultHub({
   addToDrop,
   openCart,
 }: {
-  cart: Product[];
+  cart: CartItem[];
   total: number;
-  addToDrop: (product: Product) => void;
+  addToDrop: (product: Product, selectedColor: string, selectedSize: string) => void;
   openCart: () => void;
 }) {
   const { scrollY } = useScroll();
@@ -215,7 +215,7 @@ function VaultHub({
           className="relative mx-auto grid max-w-7xl grid-cols-2 gap-3 px-3 py-10 sm:gap-5 sm:px-5 lg:grid-cols-4"
         >
           {products.map((product) => (
-            <ProductCard key={product.id} product={product} onAdd={() => addToDrop(product)} />
+            <ProductCard key={product.id} product={product} onAdd={addToDrop} />
           ))}
         </motion.div>
       </section>
@@ -265,12 +265,21 @@ function VaultHeader({
   );
 }
 
-function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }) {
+function ProductCard({
+  product,
+  onAdd,
+}: {
+  product: Product;
+  onAdd: (product: Product, selectedColor: string, selectedSize: string) => void;
+}) {
+  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
+  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
+
   return (
     <motion.article
       variants={lockIn}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="group overflow-hidden border border-border bg-vault-concrete vault-concrete"
+      className="group overflow-hidden border border-border bg-vault-concrete vault-concrete distressed-card"
     >
       <div className="relative aspect-square overflow-hidden bg-background">
         <img
@@ -279,14 +288,15 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-cover opacity-70 contrast-125 transition duration-300 group-hover:scale-105 group-hover:opacity-100"
+          className="h-full w-full object-cover opacity-70 contrast-125 transition duration-300 group-hover:scale-105 group-hover:opacity-100 group-hover:glitch-product"
         />
         <div className="absolute inset-0 bg-vault-concrete-light/40 mix-blend-multiply transition-opacity group-hover:opacity-0" />
       </div>
       <div className="space-y-3 p-3 sm:p-4">
         <h2 className="font-display text-2xl uppercase leading-none text-foreground sm:text-3xl">
-          [{product.id}] {product.name} ({product.size})
+          [{product.id}] {product.name}
         </h2>
+        <p className="font-mono text-[10px] uppercase text-vault-wire">{product.category}</p>
         <div className="space-y-1 font-mono text-[11px] uppercase text-vault-quiet sm:text-xs">
           <p>TIER: {product.tier}</p>
           <p className="matrix-price text-vault-crimson">
@@ -299,11 +309,41 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: () => void }
             STOCK: {product.stock} REMAINING
           </p>
         </div>
+        <div className="space-y-3 font-mono text-[10px] uppercase text-vault-quiet">
+          <label className="block">
+            Select Size
+            <select
+              value={selectedSize}
+              onChange={(event) => setSelectedSize(event.target.value)}
+              className="mt-1 w-full border border-border bg-background px-2 py-2 text-foreground outline-none focus:border-vault-wire"
+            >
+              {product.sizes.map((size) => (
+                <option key={size}>{size}</option>
+              ))}
+            </select>
+          </label>
+          <div className="flex flex-wrap gap-1">
+            {product.colors.map((color) => (
+              <button
+                key={color}
+                type="button"
+                onClick={() => setSelectedColor(color)}
+                className={`border px-2 py-1 ${
+                  selectedColor === color
+                    ? "border-vault-wire bg-vault-crimson text-primary-foreground shadow-vault-glow"
+                    : "border-border bg-background text-vault-quiet"
+                }`}
+              >
+                {color}
+              </button>
+            ))}
+          </div>
+        </div>
         <div className="flex justify-end">
           <Button
             variant="vault"
             size="icon"
-            onClick={onAdd}
+            onClick={() => onAdd(product, selectedColor, selectedSize)}
             aria-label={`Add ${product.name} to drop`}
           >
             <Plus />
