@@ -1,38 +1,57 @@
 [
   {
-    "id": "JS-001",
-    "name": "Premium Activewear",
-    "size": "Large",
-    "tier": "1 (SUPPLIER VERIFIED)",
+    "id": "CH-001",
+    "category": "Chrome Hearts Shirts",
+    "name": "Cross Logo Shirt",
+    "tier": "1 (CROSS VERIFIED)",
     "price": 120,
-    "stock": 7,
+    "stock": 9,
+    "colors": ["Black", "White", "Pink"],
+    "sizes": ["S", "M", "L", "XL", "XXL"],
     "image": "/products/joat-activewear.jpg"
   },
   {
-    "id": "JS-002",
-    "name": "Crimson Runner",
-    "size": "US 10",
-    "tier": "1 (SUPPLIER VERIFIED)",
+    "id": "FG-002",
+    "category": "Essentials Hoodies & Pants",
+    "name": "Fear of God Essentials Set",
+    "tier": "1 (SET LOCKED)",
     "price": 185,
-    "stock": 4,
-    "image": "/products/joat-sneakers.jpg"
+    "stock": 6,
+    "colors": ["Oatmeal", "Black", "Sage"],
+    "sizes": ["S", "M", "L", "XL"],
+    "image": "/products/joat-puffer.jpg"
   },
   {
-    "id": "JS-003",
-    "name": "Tactical Crossbody",
-    "size": "OS",
-    "tier": "2 (WAREHOUSE PULLED)",
-    "price": 95,
-    "stock": 11,
+    "id": "HS-003",
+    "category": "Hellstar",
+    "name": "Latest Graphic Tee / Hoodie",
+    "tier": "1 (LATEST DROP)",
+    "price": 145,
+    "stock": 5,
+    "colors": ["Black", "Ash", "Crimson"],
+    "sizes": ["S", "M", "L", "XL", "XXL"],
     "image": "/products/joat-crossbody.jpg"
   },
   {
-    "id": "JS-004",
-    "name": "Blackout Puffer",
-    "size": "Medium",
-    "tier": "1 (SUPPLIER VERIFIED)",
+    "id": "BP-004",
+    "category": "Bape / Bapesta",
+    "name": "Bapesta Sneaker + Shark Hoodie Lineup",
+    "tier": "1 (APE VAULT)",
     "price": 210,
-    "stock": 3,
-    "image": "/products/joat-puffer.jpg"
+    "stock": 4,
+    "colors": ["Camo Green", "Black", "Blue", "Pink"],
+    "sizes": ["US 7", "US 8", "US 9", "US 10", "US 11", "US 12"],
+    "image": "/products/joat-sneakers.jpg"
+  },
+  {
+    "id": "SV-005",
+    "category": "Scent Vault",
+    "name": "High-End Designer Fragrance",
+    "tier": "1 (SCENT VAULT)",
+    "price": 95,
+    "stock": 12,
+    "colors": ["Maison", "Creed", "Tom Ford", "LV"],
+    "sizes": ["50ml", "100ml", "Tester"],
+    "image": "/products/joat-activewear.jpg"
   }
 ]
