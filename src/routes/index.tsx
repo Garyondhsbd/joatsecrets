@@ -299,14 +299,11 @@ function LiveStockTicker() {
 
 function BackgroundMusic() {
   const audioContextRef = useRef<AudioContext | null>(null);
-  const nodesRef = useRef<{ oscillator: OscillatorNode; gain: GainNode }[]>([]);
+  const nodesRef = useRef<{ stop: () => void }[]>([]);
   const [playing, setPlaying] = useState(false);
 
   const stopMusic = () => {
-    nodesRef.current.forEach(({ oscillator, gain }) => {
-      gain.gain.setTargetAtTime(0, audioContextRef.current?.currentTime ?? 0, 0.04);
-      window.setTimeout(() => oscillator.stop(), 160);
-    });
+    nodesRef.current.forEach((node) => node.stop());
     nodesRef.current = [];
     setPlaying(false);
   };
@@ -322,20 +319,76 @@ function BackgroundMusic() {
     await context.resume();
 
     const master = context.createGain();
-    master.gain.value = 0.045;
-    master.connect(context.destination);
+    const compressor = context.createDynamicsCompressor();
+    master.gain.value = 0.025;
+    master.connect(compressor);
+    compressor.connect(context.destination);
 
-    [55, 82.41, 110].forEach((frequency, index) => {
+    const makeTone = (frequency: number, type: OscillatorType, gainValue: number) => {
+      const oscillator = context.createOscillator();
+      const filter = context.createBiquadFilter();
+      const gain = context.createGain();
+      oscillator.type = type;
+      oscillator.frequency.value = frequency;
+      filter.type = "lowpass";
+      filter.frequency.value = 420;
+      gain.gain.value = gainValue;
+      oscillator.connect(filter);
+      filter.connect(gain);
+      gain.connect(master);
+      oscillator.start();
+      nodesRef.current.push({
+        stop: () => {
+          gain.gain.setTargetAtTime(0, context.currentTime, 0.04);
+          window.setTimeout(() => oscillator.stop(), 140);
+        },
+      });
+    };
+
+    const kick = () => {
       const oscillator = context.createOscillator();
       const gain = context.createGain();
-      oscillator.type = index === 0 ? "sawtooth" : "triangle";
-      oscillator.frequency.value = frequency;
-      gain.gain.value = index === 0 ? 0.8 : 0.28;
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(92, context.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(42, context.currentTime + 0.16);
+      gain.gain.setValueAtTime(0.18, context.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.22);
       oscillator.connect(gain);
       gain.connect(master);
       oscillator.start();
-      nodesRef.current.push({ oscillator, gain });
-    });
+      oscillator.stop(context.currentTime + 0.24);
+    };
+
+    const hat = () => {
+      const bufferSize = context.sampleRate * 0.035;
+      const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
+      const data = buffer.getChannelData(0);
+      for (let index = 0; index < bufferSize; index += 1) data[index] = Math.random() * 2 - 1;
+      const source = context.createBufferSource();
+      const filter = context.createBiquadFilter();
+      const gain = context.createGain();
+      filter.type = "highpass";
+      filter.frequency.value = 7200;
+      gain.gain.value = 0.035;
+      source.buffer = buffer;
+      source.connect(filter);
+      filter.connect(gain);
+      gain.connect(master);
+      source.start();
+    };
+
+    makeTone(49, "triangle", 0.42);
+    makeTone(73.42, "sine", 0.16);
+
+    const beat = window.setInterval(() => {
+      kick();
+      window.setTimeout(hat, 145);
+      window.setTimeout(hat, 290);
+      window.setTimeout(kick, 435);
+      window.setTimeout(hat, 580);
+    }, 720);
+
+    nodesRef.current.push({ stop: () => window.clearInterval(beat) });
 
     setPlaying(true);
   };
@@ -346,10 +399,15 @@ function BackgroundMusic() {
     <button
       type="button"
       onClick={toggleMusic}
-      className="fixed bottom-4 left-4 z-30 flex h-11 w-11 items-center justify-center border border-vault-crimson bg-background/90 text-vault-wire shadow-vault-glow backdrop-blur-sm"
+      className="album-disc fixed bottom-4 left-4 z-30 grid h-20 w-20 place-items-center overflow-hidden border border-vault-crimson bg-background text-primary-foreground shadow-vault-glow"
       aria-label={playing ? "Stop background music" : "Play background music"}
     >
-      <Music2 className={playing ? "animate-pulse" : ""} size={18} />
+      <span className={playing ? "album-disc-art is-spinning" : "album-disc-art"}>
+        <span className="text-[10px] font-display uppercase leading-none">JOAT</span>
+      </span>
+      <span className="absolute bottom-1 font-mono text-[8px] uppercase tracking-[0.18em]">
+        {playing ? "Playing" : "Tap"}
+      </span>
     </button>
   );
 }
