@@ -220,10 +220,24 @@
   .vault-motion-field {
     pointer-events: none;
     background-image:
-      linear-gradient(90deg, color-mix(in oklab, var(--vault-crimson) 42%, transparent) 1px, transparent 1px),
-      linear-gradient(color-mix(in oklab, var(--vault-joker-purple) 44%, transparent) 1px, transparent 1px),
-      repeating-linear-gradient(120deg, transparent 0 34px, color-mix(in oklab, var(--vault-wire) 18%, transparent) 34px 35px);
-    background-size: 84px 84px, 84px 84px, 180px 180px;
+      linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--vault-crimson) 42%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        color-mix(in oklab, var(--vault-joker-purple) 44%, transparent) 1px,
+        transparent 1px
+      ),
+      repeating-linear-gradient(
+        120deg,
+        transparent 0 34px,
+        color-mix(in oklab, var(--vault-wire) 18%, transparent) 34px 35px
+      );
+    background-size:
+      84px 84px,
+      84px 84px,
+      180px 180px;
     mask-image: radial-gradient(circle at center, black, transparent 78%);
     animation: vault-grid-flow 8s linear infinite;
     opacity: 0.8;
@@ -298,7 +312,11 @@
     transform-style: preserve-3d;
     background-image:
       linear-gradient(135deg, var(--vault-crimson), var(--vault-joker-purple)),
-      repeating-linear-gradient(0deg, transparent 0 8px, color-mix(in oklab, var(--background) 24%, transparent) 8px 10px);
+      repeating-linear-gradient(
+        0deg,
+        transparent 0 8px,
+        color-mix(in oklab, var(--background) 24%, transparent) 8px 10px
+      );
   }
 
   .joker-card-button:active {
@@ -314,18 +332,37 @@
     position: absolute;
     inset: 0;
     pointer-events: none;
-    background-image: repeating-linear-gradient(115deg, transparent 0 9px, color-mix(in oklab, var(--foreground) 10%, transparent) 9px 10px);
+    background-image: repeating-linear-gradient(
+      115deg,
+      transparent 0 9px,
+      color-mix(in oklab, var(--foreground) 10%, transparent) 9px 10px
+    );
     mix-blend-mode: overlay;
     opacity: 0.55;
   }
 
   .glitch-product {
     filter: contrast(180%) saturate(150%) hue-rotate(42deg);
-    clip-path: polygon(0 0, 100% 0, 100% 32%, 92% 32%, 92% 42%, 100% 42%, 100% 100%, 0 100%, 0 68%, 8% 68%, 8% 58%, 0 58%);
+    clip-path: polygon(
+      0 0,
+      100% 0,
+      100% 32%,
+      92% 32%,
+      92% 42%,
+      100% 42%,
+      100% 100%,
+      0 100%,
+      0 68%,
+      8% 68%,
+      8% 58%,
+      0 58%
+    );
   }
 
   .stock-ticker {
-    animation: vault-marquee 9s linear infinite, stock-flash 680ms steps(2, end) infinite;
+    animation:
+      vault-marquee 9s linear infinite,
+      stock-flash 680ms steps(2, end) infinite;
   }
 }
 
@@ -343,10 +380,16 @@
 
 @keyframes vault-grid-flow {
   from {
-    background-position: 0 0, 0 0, 0 0;
+    background-position:
+      0 0,
+      0 0,
+      0 0;
   }
   to {
-    background-position: 84px 84px, -84px 84px, 180px 180px;
+    background-position:
+      84px 84px,
+      -84px 84px,
+      180px 180px;
   }
 }
 
