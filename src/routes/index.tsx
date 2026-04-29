@@ -203,6 +203,7 @@ function VaultHub({
         className="pointer-events-none fixed inset-0 vault-concrete opacity-30"
       />
       <VaultHeader cartCount={cart.length} total={total} openCart={openCart} />
+      <LiveStockTicker />
       <section className="relative pt-24">
         <div className="overflow-hidden border-y border-border bg-vault-concrete py-10">
           <div className="marquee-track flex w-max gap-8 font-display text-[16vw] uppercase leading-none text-foreground sm:text-[11vw]">
@@ -227,6 +228,18 @@ function VaultHub({
         </motion.div>
       </section>
     </motion.section>
+  );
+}
+
+function LiveStockTicker() {
+  return (
+    <div className="sticky top-[65px] z-20 overflow-hidden border-b border-vault-crimson bg-vault-crimson py-2 shadow-vault-glow">
+      <div className="stock-ticker flex w-max gap-8 font-display text-2xl uppercase leading-none text-primary-foreground">
+        {Array.from({ length: 4 }).map((_, index) => (
+          <span key={index}>CHROME HEARTS DROP LIVE - 2 MINUTES REMAINING</span>
+        ))}
+      </div>
+    </div>
   );
 }
 
