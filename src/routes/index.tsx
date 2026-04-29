@@ -326,7 +326,7 @@ function BackgroundMusic() {
 
     const master = context.createGain();
     const compressor = context.createDynamicsCompressor();
-    master.gain.value = 0.025;
+    master.gain.value = 0.012;
     master.connect(compressor);
     compressor.connect(context.destination);
 
@@ -357,7 +357,7 @@ function BackgroundMusic() {
       oscillator.type = "sine";
       oscillator.frequency.setValueAtTime(92, context.currentTime);
       oscillator.frequency.exponentialRampToValueAtTime(42, context.currentTime + 0.16);
-      gain.gain.setValueAtTime(0.18, context.currentTime);
+      gain.gain.setValueAtTime(0.08, context.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.22);
       oscillator.connect(gain);
       gain.connect(master);
@@ -375,7 +375,7 @@ function BackgroundMusic() {
       const gain = context.createGain();
       filter.type = "highpass";
       filter.frequency.value = 7200;
-      gain.gain.value = 0.035;
+      gain.gain.value = 0.012;
       source.buffer = buffer;
       source.connect(filter);
       filter.connect(gain);
@@ -383,8 +383,8 @@ function BackgroundMusic() {
       source.start();
     };
 
-    makeTone(49, "triangle", 0.42);
-    makeTone(73.42, "sine", 0.16);
+    makeTone(49, "sine", 0.28);
+    makeTone(73.42, "triangle", 0.09);
 
     const beat = window.setInterval(() => {
       kick();
@@ -459,7 +459,7 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Pr
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-contain p-0 opacity-100 scale-[1.18] transition duration-300 group-hover:scale-[1.25]"
+          className="h-full w-full object-contain p-0 opacity-100 scale-[1.75] transition duration-300 group-hover:scale-[1.9]"
         />
         {soldOut && (
           <div className="absolute inset-0 grid place-items-center bg-black/70 font-display text-4xl uppercase text-white">
