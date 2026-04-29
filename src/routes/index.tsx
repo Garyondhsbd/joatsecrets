@@ -23,7 +23,6 @@ type CartItem = Product & { selectedColor: string; selectedSize: string };
 type OrderDetails = { name: string; address: string; telegram: string };
 type OrderStage = "cart" | "details" | "assigning" | "pay";
 
-const PASSWORD = "JOAT_ACCESS_2026";
 const ACCESS_KEY = "joat-vault-access-2026";
 const PRODUCT_OPTION_KEY = "joat-product-options";
 const cashApp = "$joatz_plug";
@@ -234,6 +233,7 @@ function VaultHub({
         className="pointer-events-none fixed inset-0 vault-concrete opacity-30"
       />
       <VaultHeader cartCount={cart.length} openCart={openCart} />
+      <BackgroundMusic />
       <LiveStockTicker />
       <section className="relative pt-24">
         <div className="overflow-hidden border-y border-border bg-vault-concrete py-10">
