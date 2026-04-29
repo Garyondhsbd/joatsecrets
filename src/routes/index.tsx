@@ -453,7 +453,7 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Pr
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-contain p-2 opacity-100 transition duration-300 group-hover:scale-[1.03]"
+          className="h-full w-full object-contain p-0 opacity-100 scale-[1.18] transition duration-300 group-hover:scale-[1.25]"
         />
         {soldOut && (
           <div className="absolute inset-0 grid place-items-center bg-black/70 font-display text-4xl uppercase text-white">
