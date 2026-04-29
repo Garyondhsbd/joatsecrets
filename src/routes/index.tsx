@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Copy, LockKeyhole, Plus, Send, ShoppingBag, X } from "lucide-react";
+import { Copy, Plus, Send, ShoppingBag, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ export const Route = createFileRoute("/")({
 });
 
 type Product = (typeof products)[number];
+type CartItem = Product & { selectedColor: string; selectedSize: string };
 type OrderDetails = { name: string; address: string; telegram: string };
 type OrderStage = "cart" | "details" | "assigning" | "pay";
 
@@ -35,7 +36,7 @@ const lockIn = {
 
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
-  const [cart, setCart] = useState<Product[]>([]);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
@@ -47,8 +48,8 @@ function Index() {
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
 
-  const addToDrop = (product: Product) => {
-    setCart((items) => [...items, product]);
+  const addToDrop = (product: Product, selectedColor: string, selectedSize: string) => {
+    setCart((items) => [...items, { ...product, selectedColor, selectedSize }]);
     setCartOpen(true);
   };
 
