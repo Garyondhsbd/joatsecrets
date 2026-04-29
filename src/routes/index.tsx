@@ -124,16 +124,23 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
         }
         className="relative z-10 flex w-full max-w-xl flex-col items-center text-center"
       >
-        <motion.div
+        <motion.button
+          type="button"
+          onClick={attemptUnlock}
           animate={{
-            scale: [1, 1.08, 1],
-            boxShadow: ["0 0 20px #990000", "0 0 80px #ff3300", "0 0 20px #990000"],
+            rotateY: denied ? [0, 180, 360] : [0, -8, 8, 0],
+            boxShadow: [
+              "0 0 20px var(--vault-crimson)",
+              "0 0 80px var(--vault-joker-purple)",
+              "0 0 20px var(--vault-crimson)",
+            ],
           }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
-          className="mb-8 grid h-24 w-24 place-items-center border border-vault-crimson bg-vault-concrete text-vault-crimson"
+          transition={{ duration: 1.6, repeat: denied ? 0 : Infinity, ease: "linear" }}
+          className="joker-card mb-8 grid h-32 w-24 place-items-center border border-vault-crimson bg-vault-crimson font-display text-5xl text-primary-foreground"
+          aria-label="Unlock vault"
         >
-          <LockKeyhole size={42} strokeWidth={1.5} />
-        </motion.div>
+          🃏
+        </motion.button>
         <motion.h1
           initial={{ opacity: 0 }}
           animate={{ opacity: [0, 1, 0.3, 1] }}
@@ -153,9 +160,9 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
             placeholder="ENTER RAW ACCESS STRING"
             type="password"
           />
-          <Button variant="vault" size="vault" onClick={attemptUnlock}>
-            <span className="glitch-text" data-text="OPEN">
-              OPEN
+          <Button variant="vault" size="vault" onClick={attemptUnlock} className="joker-card-button">
+            <span className="glitch-text" data-text="UNLOCK">
+              UNLOCK
             </span>
           </Button>
         </div>
