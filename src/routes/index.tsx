@@ -190,18 +190,18 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
 function VaultHub({
   cart,
   total,
-  addToDrop,
+  openProductSelector,
   openCart,
 }: {
   cart: CartItem[];
   total: number;
-  addToDrop: (product: Product, selectedColor: string, selectedSize: string) => void;
+  openProductSelector: (product: Product) => void;
   openCart: () => void;
 }) {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 900], [0, -160]);
-  const scentVault = products.filter((product) => product.category === "Scent Vault");
-  const apparelVault = products.filter((product) => product.category !== "Scent Vault");
+  const fragranceVault = products.filter((product) => product.brand === "DESIGNER FRAGRANCE");
+  const apparelVault = products.filter((product) => product.brand !== "DESIGNER FRAGRANCE");
 
   return (
     <motion.section
@@ -235,17 +235,17 @@ function VaultHub({
           className="relative mx-auto grid max-w-7xl grid-cols-2 gap-3 px-3 py-10 sm:gap-5 sm:px-5 lg:grid-cols-4"
         >
           {apparelVault.map((product) => (
-            <ProductCard key={product.id} product={product} onAdd={addToDrop} />
+            <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
           ))}
         </motion.div>
         <section className="relative border-y border-vault-crimson bg-background/80 py-8 shadow-vault-glow">
           <div className="mx-auto max-w-7xl px-3 sm:px-5">
-            <h2 className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl" data-text="SCENT VAULT">
-              SCENT VAULT
+            <h2 className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl" data-text="DESIGNER FRAGRANCE">
+              DESIGNER FRAGRANCE
             </h2>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {scentVault.map((product) => (
-                <ProductCard key={product.id} product={product} onAdd={addToDrop} />
+              {fragranceVault.map((product) => (
+                <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
               ))}
             </div>
           </div>
