@@ -38,6 +38,7 @@ function Index() {
   const [unlocked, setUnlocked] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [selectingProduct, setSelectingProduct] = useState<Product | null>(null);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
   const [details, setDetails] = useState<OrderDetails>({ name: "", address: "", telegram: "" });
@@ -73,11 +74,20 @@ function Index() {
             key="vault"
             cart={cart}
             total={total}
-            addToDrop={addToDrop}
+            openProductSelector={setSelectingProduct}
             openCart={() => setCartOpen(true)}
           />
         )}
       </AnimatePresence>
+
+      <ProductSelectionDrawer
+        product={selectingProduct}
+        onClose={() => setSelectingProduct(null)}
+        onAdd={(product: Product, selectedColor: string, selectedSize: string) => {
+          addToDrop(product, selectedColor, selectedSize);
+          setSelectingProduct(null);
+        }}
+      />
 
       <CartDrawer
         open={cartOpen}
@@ -180,18 +190,18 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
 function VaultHub({
   cart,
   total,
-  addToDrop,
+  openProductSelector,
   openCart,
 }: {
   cart: CartItem[];
   total: number;
-  addToDrop: (product: Product, selectedColor: string, selectedSize: string) => void;
+  openProductSelector: (product: Product) => void;
   openCart: () => void;
 }) {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 900], [0, -160]);
-  const scentVault = products.filter((product) => product.category === "Scent Vault");
-  const apparelVault = products.filter((product) => product.category !== "Scent Vault");
+  const fragranceVault = products.filter((product) => product.brand === "DESIGNER FRAGRANCE");
+  const apparelVault = products.filter((product) => product.brand !== "DESIGNER FRAGRANCE");
 
   return (
     <motion.section
@@ -204,7 +214,7 @@ function VaultHub({
         style={{ y: bgY }}
         className="pointer-events-none fixed inset-0 vault-concrete opacity-30"
       />
-      <VaultHeader cartCount={cart.length} total={total} openCart={openCart} />
+      <VaultHeader cartCount={cart.length} openCart={openCart} />
       <LiveStockTicker />
       <section className="relative pt-24">
         <div className="overflow-hidden border-y border-border bg-vault-concrete py-10">
@@ -225,17 +235,17 @@ function VaultHub({
           className="relative mx-auto grid max-w-7xl grid-cols-2 gap-3 px-3 py-10 sm:gap-5 sm:px-5 lg:grid-cols-4"
         >
           {apparelVault.map((product) => (
-            <ProductCard key={product.id} product={product} onAdd={addToDrop} />
+            <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
           ))}
         </motion.div>
         <section className="relative border-y border-vault-crimson bg-background/80 py-8 shadow-vault-glow">
           <div className="mx-auto max-w-7xl px-3 sm:px-5">
-            <h2 className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl" data-text="SCENT VAULT">
-              SCENT VAULT
+            <h2 className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl" data-text="DESIGNER FRAGRANCE">
+              DESIGNER FRAGRANCE
             </h2>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {scentVault.map((product) => (
-                <ProductCard key={product.id} product={product} onAdd={addToDrop} />
+              {fragranceVault.map((product) => (
+                <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
               ))}
             </div>
           </div>
@@ -259,41 +269,26 @@ function LiveStockTicker() {
 
 function VaultHeader({
   cartCount,
-  total,
   openCart,
 }: {
   cartCount: number;
-  total: number;
   openCart: () => void;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <div className="font-display text-3xl uppercase leading-none text-foreground sm:text-5xl">
-          JOAT SECRETS
+      <div className="mx-auto grid max-w-7xl grid-cols-3 items-center px-4 py-3">
+        <button onClick={openCart} className="relative justify-self-start" aria-label="Open cart">
+          <ShoppingBag className={cartCount === 0 ? "text-vault-crimson" : "text-vault-wire"} />
+          <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-vault-crimson px-1 font-mono text-[10px] text-primary-foreground">
+            {cartCount}
+          </span>
+        </button>
+        <div className="justify-self-center font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
+          J-KEY
         </div>
-        <nav className="flex items-center gap-2">
-          <Button
-            variant="vaultGhost"
-            size="icon"
-            onClick={openCart}
-            aria-label="Open secure drop cart"
-            className="relative"
-          >
-            <ShoppingBag className={cartCount === 0 ? "text-vault-crimson" : "text-vault-wire"} />
-            <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-vault-crimson px-1 font-mono text-[10px] text-primary-foreground">
-              {cartCount}
-            </span>
-          </Button>
-          <Button variant="vaultGhost" asChild>
-            <a href="https://t.me/joatz" className="px-3">
-              <Send size={16} />
-              <span className="hidden font-mono text-xs uppercase sm:inline">
-                ${total} // Telegram
-              </span>
-            </a>
-          </Button>
-        </nav>
+        <a href="https://t.me/joatz" className="justify-self-end text-vault-wire" aria-label="Telegram @joatz">
+          <Send size={20} />
+        </a>
       </div>
     </header>
   );
@@ -304,80 +299,37 @@ function ProductCard({
   onAdd,
 }: {
   product: Product;
-  onAdd: (product: Product, selectedColor: string, selectedSize: string) => void;
+  onAdd: (product: Product) => void;
 }) {
-  const [selectedColor, setSelectedColor] = useState(product.colors[0]);
-  const [selectedSize, setSelectedSize] = useState(product.sizes[0]);
-
   return (
     <motion.article
       variants={lockIn}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="distressed-card group relative overflow-hidden border border-border bg-vault-concrete vault-concrete"
+      className="group relative overflow-hidden border border-black bg-white text-black"
     >
-      <div className="relative aspect-square overflow-hidden bg-background">
+      <div className="relative aspect-square overflow-hidden bg-white">
         <img
           src={product.image}
           alt={`${product.name} sourced inventory`}
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-cover opacity-70 contrast-125 transition duration-300 group-hover:scale-105 group-hover:opacity-100 group-hover:glitch-product"
+          className="h-full w-full object-cover opacity-100 transition duration-300 group-hover:scale-[1.03]"
         />
-        <div className="absolute inset-0 bg-vault-concrete-light/40 mix-blend-multiply transition-opacity group-hover:opacity-0" />
       </div>
       <div className="space-y-3 p-3 sm:p-4">
-        <h2 className="font-display text-2xl uppercase leading-none text-foreground sm:text-3xl">
-          [{product.id}] {product.name}
-        </h2>
-        <p className="font-mono text-[10px] uppercase text-vault-wire">{product.category}</p>
-        <div className="space-y-1 font-mono text-[11px] uppercase text-vault-quiet sm:text-xs">
-          <p>TIER: {product.tier}</p>
-          <p className="matrix-price text-vault-crimson">
-            PRICE:{" "}
-            <span className="matrix-value relative">
-              <span>${product.price}</span>
-            </span>
-          </p>
-          <p className={product.stock <= 4 ? "text-vault-crimson" : "text-vault-quiet"}>
-            STOCK: {product.stock} REMAINING
-          </p>
+        <div>
+          <p className="font-mono text-[10px] uppercase text-black/60">{product.brand}</p>
+          <h2 className="font-display text-2xl uppercase leading-none text-black sm:text-3xl">
+            {product.name}
+          </h2>
         </div>
-        <div className="space-y-3 font-mono text-[10px] uppercase text-vault-quiet">
-          <label className="block">
-            Select Size
-            <select
-              value={selectedSize}
-              onChange={(event) => setSelectedSize(event.target.value)}
-              className="mt-1 w-full border border-border bg-background px-2 py-2 text-foreground outline-none focus:border-vault-wire"
-            >
-              {product.sizes.map((size) => (
-                <option key={size}>{size}</option>
-              ))}
-            </select>
-          </label>
-          <div className="flex flex-wrap gap-1">
-            {product.colors.map((color) => (
-              <button
-                key={color}
-                type="button"
-                onClick={() => setSelectedColor(color)}
-                className={`border px-2 py-1 ${
-                  selectedColor === color
-                    ? "border-vault-wire bg-vault-crimson text-primary-foreground shadow-vault-glow"
-                    : "border-border bg-background text-vault-quiet"
-                }`}
-              >
-                {color}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="flex justify-end">
+        <div className="flex items-center justify-between">
+          <p className="font-mono text-sm uppercase text-black">${product.price}</p>
           <Button
             variant="vault"
             size="icon"
-            onClick={() => onAdd(product, selectedColor, selectedSize)}
+            onClick={() => onAdd(product)}
             aria-label={`Add ${product.name} to drop`}
           >
             <Plus />
