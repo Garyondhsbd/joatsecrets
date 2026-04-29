@@ -200,7 +200,7 @@
   }
 
   .vault-noise::before {
-    content: "J ♢ Q ♧ K ♤ 🃏 J ♢ Q ♧ K ♤ 🃏";
+    content: "JOAT // SOURCE // PACK // SHIP // VAULT // TELEGRAM // JOAT // SOURCE";
     position: fixed;
     inset: 0;
     z-index: 0;
@@ -214,6 +214,19 @@
     text-align: center;
     opacity: 0.45;
     transform: rotate(-12deg);
+    animation: vault-drift 18s linear infinite;
+  }
+
+  .vault-motion-field {
+    pointer-events: none;
+    background-image:
+      linear-gradient(90deg, color-mix(in oklab, var(--vault-crimson) 42%, transparent) 1px, transparent 1px),
+      linear-gradient(color-mix(in oklab, var(--vault-joker-purple) 44%, transparent) 1px, transparent 1px),
+      repeating-linear-gradient(120deg, transparent 0 34px, color-mix(in oklab, var(--vault-wire) 18%, transparent) 34px 35px);
+    background-size: 84px 84px, 84px 84px, 180px 180px;
+    mask-image: radial-gradient(circle at center, black, transparent 78%);
+    animation: vault-grid-flow 8s linear infinite;
+    opacity: 0.8;
   }
 
   .vault-concrete {
@@ -313,6 +326,27 @@
 
   .stock-ticker {
     animation: vault-marquee 9s linear infinite, stock-flash 680ms steps(2, end) infinite;
+  }
+}
+
+@keyframes vault-drift {
+  0% {
+    transform: translate3d(-4%, 0, 0) rotate(-12deg);
+  }
+  50% {
+    transform: translate3d(4%, -3%, 0) rotate(-12deg);
+  }
+  100% {
+    transform: translate3d(-4%, 0, 0) rotate(-12deg);
+  }
+}
+
+@keyframes vault-grid-flow {
+  from {
+    background-position: 0 0, 0 0, 0 0;
+  }
+  to {
+    background-position: 84px 84px, -84px 84px, 180px 180px;
   }
 }
 
