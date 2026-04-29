@@ -379,8 +379,13 @@ function ProductSelectionDrawer({
 
   useEffect(() => {
     if (!product) return;
-    setSelectedColor(product.colors[0] ?? "");
-    setSelectedSize(product.sizes[0] ?? "");
+    const saved = readProductOptionMemory(product.id);
+    setSelectedColor(
+      saved.color && product.colors.includes(saved.color) ? saved.color : (product.colors[0] ?? ""),
+    );
+    setSelectedSize(
+      saved.size && product.sizes.includes(saved.size) ? saved.size : (product.sizes[0] ?? ""),
+    );
   }, [product]);
 
   return (
@@ -424,7 +429,10 @@ function ProductSelectionDrawer({
               variant="vault"
               size="vault"
               className="w-full"
-              onClick={() => onAdd(product, selectedColor, selectedSize)}
+              onClick={() => {
+                writeProductOptionMemory(product.id, selectedColor, selectedSize);
+                onAdd(product, selectedColor, selectedSize);
+              }}
               disabled={!selectedColor || !selectedSize}
             >
               ADD TO CART
