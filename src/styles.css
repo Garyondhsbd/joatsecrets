@@ -428,6 +428,25 @@
   }
 }
 
+@keyframes vault-pulse-pan {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -4%, 0) scale(1.08);
+  }
+}
+
+@keyframes album-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @keyframes vault-marquee {
   from {
     transform: translateX(0);
