@@ -109,10 +109,13 @@
   --vault-crimson: oklch(0.407 0.164 29.23);
   --vault-wire: oklch(0.632 0.257 31.35);
   --vault-quiet: oklch(0.511 0 0);
-  --font-display: Impact, Anton, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
-  --font-mono: 'Roboto Mono', 'Major Mono Display', 'Courier New', monospace;
+  --font-display: Impact, Anton, Haettenschweiler, "Arial Narrow Bold", sans-serif;
+  --font-mono: "Roboto Mono", "Major Mono Display", "Courier New", monospace;
   --font-body: Inter, Roboto, Arial, sans-serif;
-  --shadow-vault-glow: 0 0 0 1px var(--vault-crimson), 0 0 24px color-mix(in oklab, var(--vault-wire) 45%, transparent), 0 0 70px color-mix(in oklab, var(--vault-crimson) 35%, transparent);
+  --shadow-vault-glow:
+    0 0 0 1px var(--vault-crimson),
+    0 0 24px color-mix(in oklab, var(--vault-wire) 45%, transparent),
+    0 0 70px color-mix(in oklab, var(--vault-crimson) 35%, transparent);
 }
 
 .dark {
@@ -177,20 +180,37 @@
 @layer utilities {
   .vault-noise {
     background-image:
-      linear-gradient(color-mix(in oklab, var(--vault-crimson) 8%, transparent) 1px, transparent 1px),
-      linear-gradient(90deg, color-mix(in oklab, var(--foreground) 4%, transparent) 1px, transparent 1px);
+      linear-gradient(
+        color-mix(in oklab, var(--vault-crimson) 8%, transparent) 1px,
+        transparent 1px
+      ),
+      linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--foreground) 4%, transparent) 1px,
+        transparent 1px
+      );
     background-size: 46px 46px;
   }
 
   .vault-concrete {
     background-image:
-      radial-gradient(circle at 20% 10%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent 28%),
-      linear-gradient(135deg, color-mix(in oklab, var(--foreground) 5%, transparent), transparent 48%);
+      radial-gradient(
+        circle at 20% 10%,
+        color-mix(in oklab, var(--foreground) 8%, transparent),
+        transparent 28%
+      ),
+      linear-gradient(
+        135deg,
+        color-mix(in oklab, var(--foreground) 5%, transparent),
+        transparent 48%
+      );
   }
 
   .glitch-text {
     position: relative;
-    text-shadow: 2px 0 var(--vault-wire), -2px 0 oklch(0.64 0.21 249);
+    text-shadow:
+      2px 0 var(--vault-wire),
+      -2px 0 oklch(0.64 0.21 249);
   }
 
   .glitch-text::before,
@@ -200,7 +220,9 @@
     inset: 0;
     pointer-events: none;
     opacity: 0;
-    transition: opacity 120ms linear, transform 120ms linear;
+    transition:
+      opacity 120ms linear,
+      transform 120ms linear;
   }
 
   .glitch-trigger:hover .glitch-text::before,
@@ -232,16 +254,30 @@
 }
 
 @keyframes vault-marquee {
-  from { transform: translateX(0); }
-  to { transform: translateX(-50%); }
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
 }
 
 @keyframes matrix-scramble {
-  0% { content: "$7#A0"; }
-  25% { content: "$19#3"; }
-  50% { content: "$88#X"; }
-  75% { content: "$4?01"; }
-  100% { content: "$120"; }
+  0% {
+    content: "$7#A0";
+  }
+  25% {
+    content: "$19#3";
+  }
+  50% {
+    content: "$88#X";
+  }
+  75% {
+    content: "$4?01";
+  }
+  100% {
+    content: "$120";
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
