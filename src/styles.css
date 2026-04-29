@@ -245,9 +245,22 @@
 
   .vault-scroll-pulse {
     background-image:
-      radial-gradient(circle at 12% 20%, color-mix(in oklab, var(--vault-crimson) 32%, transparent), transparent 24%),
-      radial-gradient(circle at 88% 40%, color-mix(in oklab, var(--vault-joker-purple) 38%, transparent), transparent 25%),
-      linear-gradient(115deg, transparent 0 42%, color-mix(in oklab, var(--vault-wire) 12%, transparent) 42% 43%, transparent 43%);
+      radial-gradient(
+        circle at 12% 20%,
+        color-mix(in oklab, var(--vault-crimson) 32%, transparent),
+        transparent 24%
+      ),
+      radial-gradient(
+        circle at 88% 40%,
+        color-mix(in oklab, var(--vault-joker-purple) 38%, transparent),
+        transparent 25%
+      ),
+      linear-gradient(
+        115deg,
+        transparent 0 42%,
+        color-mix(in oklab, var(--vault-wire) 12%, transparent) 42% 43%,
+        transparent 43%
+      );
     filter: blur(0.2px);
     opacity: 0.85;
     mix-blend-mode: screen;
@@ -263,7 +276,13 @@
     border-radius: 999px;
     background:
       radial-gradient(circle, var(--background) 0 13%, transparent 14%),
-      conic-gradient(from 0deg, var(--vault-crimson), var(--vault-joker-purple), var(--vault-wire), var(--vault-crimson));
+      conic-gradient(
+        from 0deg,
+        var(--vault-crimson),
+        var(--vault-joker-purple),
+        var(--vault-wire),
+        var(--vault-crimson)
+      );
   }
 
   .album-disc-art::before {

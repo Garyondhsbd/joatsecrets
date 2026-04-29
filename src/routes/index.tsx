@@ -234,8 +234,14 @@ function VaultHub({
         style={{ y: bgY }}
         className="pointer-events-none fixed inset-0 vault-concrete opacity-30"
       />
-      <motion.div style={{ y: gridY }} className="vault-motion-field pointer-events-none fixed inset-0" />
-      <motion.div style={{ y: pulseY }} className="vault-scroll-pulse pointer-events-none fixed inset-0" />
+      <motion.div
+        style={{ y: gridY }}
+        className="vault-motion-field pointer-events-none fixed inset-0"
+      />
+      <motion.div
+        style={{ y: pulseY }}
+        className="vault-scroll-pulse pointer-events-none fixed inset-0"
+      />
       <VaultHeader cartCount={cart.length} openCart={openCart} />
       <BackgroundMusic />
       <LiveStockTicker />
