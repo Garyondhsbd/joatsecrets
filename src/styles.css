@@ -247,12 +247,12 @@
     background-image:
       radial-gradient(
         circle at 12% 20%,
-        color-mix(in oklab, var(--vault-crimson) 32%, transparent),
+        color-mix(in oklab, var(--vault-crimson) 45%, transparent),
         transparent 24%
       ),
       radial-gradient(
         circle at 88% 40%,
-        color-mix(in oklab, var(--vault-joker-purple) 38%, transparent),
+        color-mix(in oklab, var(--vault-joker-purple) 52%, transparent),
         transparent 25%
       ),
       linear-gradient(
