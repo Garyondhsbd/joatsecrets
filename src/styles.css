@@ -155,8 +155,102 @@
     border-color: var(--color-border);
   }
 
+  html {
+    background: var(--color-background);
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
+    font-family: var(--font-body);
+    letter-spacing: 0;
+    min-width: 320px;
+  }
+
+  button,
+  input,
+  textarea {
+    font: inherit;
+  }
+}
+
+@layer utilities {
+  .vault-noise {
+    background-image:
+      linear-gradient(color-mix(in oklab, var(--vault-crimson) 8%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in oklab, var(--foreground) 4%, transparent) 1px, transparent 1px);
+    background-size: 46px 46px;
+  }
+
+  .vault-concrete {
+    background-image:
+      radial-gradient(circle at 20% 10%, color-mix(in oklab, var(--foreground) 8%, transparent), transparent 28%),
+      linear-gradient(135deg, color-mix(in oklab, var(--foreground) 5%, transparent), transparent 48%);
+  }
+
+  .glitch-text {
+    position: relative;
+    text-shadow: 2px 0 var(--vault-wire), -2px 0 oklch(0.64 0.21 249);
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 120ms linear, transform 120ms linear;
+  }
+
+  .glitch-trigger:hover .glitch-text::before,
+  .glitch-trigger:focus-visible .glitch-text::before {
+    opacity: 0.78;
+    color: var(--vault-wire);
+    transform: translate(2px, -1px);
+  }
+
+  .glitch-trigger:hover .glitch-text::after,
+  .glitch-trigger:focus-visible .glitch-text::after {
+    opacity: 0.65;
+    color: oklch(0.64 0.21 249);
+    transform: translate(-2px, 1px);
+  }
+
+  .marquee-track {
+    animation: vault-marquee 16s linear infinite;
+  }
+
+  .matrix-price:hover .matrix-value::before {
+    content: "$7#A0|$19#3|$88#X|$120";
+    animation: matrix-scramble 700ms steps(4, end) 1;
+  }
+
+  .matrix-price:hover .matrix-value span {
+    opacity: 0;
+  }
+}
+
+@keyframes vault-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes matrix-scramble {
+  0% { content: "$7#A0"; }
+  25% { content: "$19#3"; }
+  50% { content: "$88#X"; }
+  75% { content: "$4?01"; }
+  100% { content: "$120"; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
