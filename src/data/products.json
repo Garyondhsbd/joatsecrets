@@ -8,7 +8,7 @@
     "stock": 9,
     "colors": ["Black", "White", "Pink"],
     "sizes": ["S", "M", "L", "XL", "XXL"],
-    "image": "/products/joat-activewear.jpg"
+    "image": "/products/chrome-cross-shirt.jpg"
   },
   {
     "id": "CH-002",
@@ -19,7 +19,7 @@
     "stock": 7,
     "colors": ["Black", "White", "Pink"],
     "sizes": ["OS"],
-    "image": "/products/joat-crossbody.jpg"
+    "image": "/products/chrome-trucker-hat.jpg"
   },
   {
     "id": "CH-003",
@@ -30,7 +30,7 @@
     "stock": 5,
     "colors": ["Black", "White", "Pink"],
     "sizes": ["S", "M", "L", "XL"],
-    "image": "/products/joat-puffer.jpg"
+    "image": "/products/chrome-hoodie.jpg"
   },
   {
     "id": "ES-004",
@@ -41,7 +41,7 @@
     "stock": 11,
     "colors": ["Oatmeal", "Sage", "Black"],
     "sizes": ["S", "M", "L", "XL", "XXL"],
-    "image": "/products/joat-puffer.jpg"
+    "image": "/products/essentials-hoodie.jpg"
   },
   {
     "id": "ES-005",
@@ -52,7 +52,7 @@
     "stock": 10,
     "colors": ["Oatmeal", "Sage", "Black"],
     "sizes": ["S", "M", "L", "XL", "XXL"],
-    "image": "/products/joat-activewear.jpg"
+    "image": "/products/essentials-sweatpants.jpg"
   },
   {
     "id": "HS-006",
@@ -63,7 +63,7 @@
     "stock": 8,
     "colors": ["Black", "Ash", "Cream"],
     "sizes": ["S", "M", "L", "XL", "XXL"],
-    "image": "/products/joat-activewear.jpg"
+    "image": "/products/hellstar-tee.jpg"
   },
   {
     "id": "HS-007",
@@ -74,7 +74,7 @@
     "stock": 6,
     "colors": ["Black", "Grey", "Washed Navy"],
     "sizes": ["S", "M", "L", "XL"],
-    "image": "/products/joat-crossbody.jpg"
+    "image": "/products/hellstar-flare-sweats.jpg"
   },
   {
     "id": "BP-008",
@@ -85,7 +85,7 @@
     "stock": 6,
     "colors": ["Green Camo", "Black", "Blue Camo"],
     "sizes": ["S", "M", "L", "XL", "XXL"],
-    "image": "/products/joat-puffer.jpg"
+    "image": "/products/bape-shark-hoodie.jpg"
   },
   {
     "id": "BP-009",
@@ -96,7 +96,7 @@
     "stock": 4,
     "colors": ["Patent Black", "College Blue", "Pink Camo"],
     "sizes": ["US 7", "US 8", "US 9", "US 10", "US 11", "US 12"],
-    "image": "/products/joat-sneakers.jpg"
+    "image": "/products/bapesta-sneaker.jpg"
   },
   {
     "id": "DF-010",
@@ -107,7 +107,7 @@
     "stock": 9,
     "colors": ["Aventus"],
     "sizes": ["50ml", "100ml"],
-    "image": "/products/joat-crossbody.jpg"
+    "image": "/products/creed-aventus-bottle.jpg"
   },
   {
     "id": "DF-011",
@@ -118,7 +118,7 @@
     "stock": 8,
     "colors": ["Oud Wood"],
     "sizes": ["50ml", "100ml"],
-    "image": "/products/joat-crossbody.jpg"
+    "image": "/products/tom-ford-oud-wood-bottle.jpg"
   },
   {
     "id": "DF-012",
@@ -129,6 +129,6 @@
     "stock": 7,
     "colors": ["BR540"],
     "sizes": ["35ml", "70ml"],
-    "image": "/products/joat-crossbody.jpg"
+    "image": "/products/baccarat-rouge-bottle.jpg"
   }
 ]
