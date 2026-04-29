@@ -62,6 +62,7 @@
   --color-vault-concrete: var(--vault-concrete);
   --color-vault-concrete-light: var(--vault-concrete-light);
   --color-vault-crimson: var(--vault-crimson);
+  --color-vault-joker-purple: var(--vault-joker-purple);
   --color-vault-wire: var(--vault-wire);
   --color-vault-quiet: var(--vault-quiet);
   --font-display: var(--font-display);
@@ -71,7 +72,7 @@
 }
 
 :root {
-  --radius: 0.125rem;
+  --radius: 0rem;
   --background: oklch(0 0 0);
   --foreground: oklch(0.955 0 0);
   --card: oklch(0.113 0 0);
@@ -104,18 +105,19 @@
   --sidebar-accent-foreground: oklch(0.955 0 0);
   --sidebar-border: oklch(0.26 0 0);
   --sidebar-ring: oklch(0.632 0.257 31.35);
-  --vault-concrete: oklch(0.113 0 0);
-  --vault-concrete-light: oklch(0.17 0 0);
-  --vault-crimson: oklch(0.407 0.164 29.23);
-  --vault-wire: oklch(0.632 0.257 31.35);
+  --vault-concrete: oklch(0.105 0.028 308);
+  --vault-concrete-light: oklch(0.18 0.045 309);
+  --vault-crimson: oklch(0.48 0.22 28);
+  --vault-joker-purple: oklch(0.33 0.18 310);
+  --vault-wire: oklch(0.72 0.28 28);
   --vault-quiet: oklch(0.511 0 0);
   --font-display: Impact, Anton, Haettenschweiler, "Arial Narrow Bold", sans-serif;
   --font-mono: "Roboto Mono", "Major Mono Display", "Courier New", monospace;
   --font-body: Inter, Roboto, Arial, sans-serif;
   --shadow-vault-glow:
     0 0 0 1px var(--vault-crimson),
-    0 0 24px color-mix(in oklab, var(--vault-wire) 45%, transparent),
-    0 0 70px color-mix(in oklab, var(--vault-crimson) 35%, transparent);
+    0 0 28px color-mix(in oklab, var(--vault-wire) 55%, transparent),
+    0 0 78px color-mix(in oklab, var(--vault-joker-purple) 55%, transparent);
 }
 
 .dark {
