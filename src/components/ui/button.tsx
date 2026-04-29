@@ -11,6 +11,10 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground shadow hover:bg-primary/90",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        vault:
+          "glitch-trigger rounded-none border border-vault-crimson bg-vault-crimson font-display uppercase tracking-normal text-primary-foreground shadow-vault-glow transition-[box-shadow,transform,background-color] duration-150 hover:bg-vault-wire hover:shadow-vault-glow active:translate-y-px",
+        vaultGhost:
+          "glitch-trigger rounded-none border border-border bg-vault-concrete font-mono uppercase text-foreground transition-[border-color,box-shadow,color] duration-150 hover:border-vault-wire hover:text-foreground hover:shadow-vault-glow",
         outline:
           "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
@@ -21,6 +25,7 @@ const buttonVariants = cva(
         default: "h-9 px-4 py-2",
         sm: "h-8 rounded-md px-3 text-xs",
         lg: "h-10 rounded-md px-8",
+        vault: "h-12 px-6 text-lg",
         icon: "h-9 w-9",
       },
     },
