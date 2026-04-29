@@ -62,7 +62,13 @@ const lockIn = {
   show: { opacity: 1, y: 0, rotateX: 0, filter: "contrast(100%) brightness(1)" },
 };
 
-const productSections = ["Bape Tees", "Sp5der Hoodies", "Essentials Shorts", "Hellstar Tees", "Fragrance"];
+const productSections = [
+  "Bape Tees",
+  "Sp5der Hoodies",
+  "Essentials Shorts",
+  "Hellstar Tees",
+  "Fragrance",
+];
 
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
