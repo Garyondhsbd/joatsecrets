@@ -243,6 +243,69 @@
     opacity: 0.8;
   }
 
+  .vault-scroll-pulse {
+    background-image:
+      radial-gradient(
+        circle at 12% 20%,
+        color-mix(in oklab, var(--vault-crimson) 45%, transparent),
+        transparent 24%
+      ),
+      radial-gradient(
+        circle at 88% 40%,
+        color-mix(in oklab, var(--vault-joker-purple) 52%, transparent),
+        transparent 25%
+      ),
+      linear-gradient(
+        115deg,
+        transparent 0 42%,
+        color-mix(in oklab, var(--vault-wire) 12%, transparent) 42% 43%,
+        transparent 43%
+      );
+    filter: blur(0.2px);
+    opacity: 0.85;
+    mix-blend-mode: screen;
+    animation: vault-pulse-pan 13s ease-in-out infinite;
+  }
+
+  .album-disc-art {
+    position: absolute;
+    inset: 8px;
+    display: grid;
+    place-items: center;
+    border: 1px solid color-mix(in oklab, var(--foreground) 58%, transparent);
+    border-radius: 999px;
+    background:
+      radial-gradient(circle, var(--background) 0 13%, transparent 14%),
+      conic-gradient(
+        from 0deg,
+        var(--vault-crimson),
+        var(--vault-joker-purple),
+        var(--vault-wire),
+        var(--vault-crimson)
+      );
+  }
+
+  .album-disc-art::before {
+    content: "";
+    position: absolute;
+    inset: 14px;
+    border: 1px solid color-mix(in oklab, var(--background) 42%, transparent);
+    border-radius: 999px;
+  }
+
+  .album-disc-art.is-spinning {
+    animation: album-spin 1.4s linear infinite;
+  }
+
+  section:has(.group.relative.grid) {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--vault-crimson) 10%, transparent),
+      color-mix(in oklab, var(--vault-joker-purple) 14%, transparent),
+      transparent
+    );
+  }
+
   .vault-concrete {
     background-image:
       repeating-linear-gradient(
@@ -390,6 +453,25 @@
       84px 84px,
       -84px 84px,
       180px 180px;
+  }
+}
+
+@keyframes vault-pulse-pan {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(0, -4%, 0) scale(1.08);
+  }
+}
+
+@keyframes album-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
   }
 }
 
