@@ -293,6 +293,63 @@ function LiveStockTicker() {
   );
 }
 
+function BackgroundMusic() {
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const nodesRef = useRef<{ oscillator: OscillatorNode; gain: GainNode }[]>([]);
+  const [playing, setPlaying] = useState(false);
+
+  const stopMusic = () => {
+    nodesRef.current.forEach(({ oscillator, gain }) => {
+      gain.gain.setTargetAtTime(0, audioContextRef.current?.currentTime ?? 0, 0.04);
+      window.setTimeout(() => oscillator.stop(), 160);
+    });
+    nodesRef.current = [];
+    setPlaying(false);
+  };
+
+  const toggleMusic = async () => {
+    if (playing) {
+      stopMusic();
+      return;
+    }
+
+    const context = audioContextRef.current ?? new AudioContext();
+    audioContextRef.current = context;
+    await context.resume();
+
+    const master = context.createGain();
+    master.gain.value = 0.045;
+    master.connect(context.destination);
+
+    [55, 82.41, 110].forEach((frequency, index) => {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      oscillator.type = index === 0 ? "sawtooth" : "triangle";
+      oscillator.frequency.value = frequency;
+      gain.gain.value = index === 0 ? 0.8 : 0.28;
+      oscillator.connect(gain);
+      gain.connect(master);
+      oscillator.start();
+      nodesRef.current.push({ oscillator, gain });
+    });
+
+    setPlaying(true);
+  };
+
+  useEffect(() => stopMusic, []);
+
+  return (
+    <button
+      type="button"
+      onClick={toggleMusic}
+      className="fixed bottom-4 left-4 z-30 flex h-11 w-11 items-center justify-center border border-vault-crimson bg-background/90 text-vault-wire shadow-vault-glow backdrop-blur-sm"
+      aria-label={playing ? "Stop background music" : "Play background music"}
+    >
+      <Music2 className={playing ? "animate-pulse" : ""} size={18} />
+    </button>
+  );
+}
+
 function VaultHeader({ cartCount, openCart }: { cartCount: number; openCart: () => void }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
