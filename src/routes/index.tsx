@@ -465,6 +465,12 @@ function CartList({
   total: number;
   onSecure: () => void;
 }) {
+  const secureMessage = encodeURIComponent(
+    `JOAT DROP REQUEST\n${cart
+      .map((item) => `${item.id} - ${item.name} / ${item.selectedColor} / ${item.selectedSize}`)
+      .join("\n")}\nTotal: $${total}`,
+  );
+
   return (
     <div className="space-y-4">
       {cart.length === 0 ? (
@@ -486,17 +492,21 @@ function CartList({
         <span>Total</span>
         <span className="text-vault-crimson">${total}</span>
       </div>
-      <Button
-        variant="vault"
-        size="vault"
-        className="w-full"
-        disabled={cart.length === 0}
-        onClick={onSecure}
-      >
-        <span className="glitch-text" data-text="SECURE THE DROP">
-          SECURE THE DROP
-        </span>
-      </Button>
+      {cart.length === 0 ? (
+        <Button variant="vault" size="vault" className="w-full" disabled onClick={onSecure}>
+          <span className="glitch-text" data-text="SECURE THE DROP">
+            SECURE THE DROP
+          </span>
+        </Button>
+      ) : (
+        <Button variant="vault" size="vault" className="w-full" asChild>
+          <a href={`https://t.me/joatz?text=${secureMessage}`}>
+            <span className="glitch-text" data-text="SECURE THE DROP">
+              SECURE THE DROP
+            </span>
+          </a>
+        </Button>
+      )}
     </div>
   );
 }
