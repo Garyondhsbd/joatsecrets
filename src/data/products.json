@@ -148,7 +148,7 @@
     "category": "Sp5der Hoodies",
     "name": "OG Black Pink Sp5der",
     "price": 155,
-    "stock": 0,
+    "stock": 5,
     "colors": ["Black / Pink"],
     "sizes": ["S", "M", "L"],
     "image": "/products/actual/og-black-pink-sp5der.jpg"
@@ -159,7 +159,7 @@
     "category": "Sp5der Hoodies",
     "name": "Sky Blue Sp5der",
     "price": 155,
-    "stock": 0,
+    "stock": 5,
     "colors": ["Sky Blue"],
     "sizes": ["S", "M", "L"],
     "image": "/products/actual/sky-blue-sp5der.jpg"
