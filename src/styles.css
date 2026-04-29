@@ -343,6 +343,28 @@
   }
 }
 
+@keyframes joker-flip {
+  from {
+    transform: rotateY(0deg) scale(1);
+  }
+  50% {
+    transform: rotateY(180deg) scale(1.06);
+  }
+  to {
+    transform: rotateY(360deg) scale(1);
+  }
+}
+
+@keyframes stock-flash {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.8) saturate(1.5);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
