@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Copy, Music2, Plus, Send, ShoppingBag, X } from "lucide-react";
+import { Copy, Plus, Send, ShoppingBag, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -220,6 +220,8 @@ function VaultHub({
 }) {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 900], [0, -160]);
+  const gridY = useTransform(scrollY, [0, 1600], [0, 260]);
+  const pulseY = useTransform(scrollY, [0, 1600], [0, -220]);
 
   return (
     <motion.section
@@ -232,6 +234,8 @@ function VaultHub({
         style={{ y: bgY }}
         className="pointer-events-none fixed inset-0 vault-concrete opacity-30"
       />
+      <motion.div style={{ y: gridY }} className="vault-motion-field pointer-events-none fixed inset-0" />
+      <motion.div style={{ y: pulseY }} className="vault-scroll-pulse pointer-events-none fixed inset-0" />
       <VaultHeader cartCount={cart.length} openCart={openCart} />
       <BackgroundMusic />
       <LiveStockTicker />
