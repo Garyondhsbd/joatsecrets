@@ -25,9 +25,37 @@ type OrderStage = "cart" | "details" | "assigning" | "pay";
 
 const PASSWORD = "JOAT_ACCESS_2026";
 const ACCESS_KEY = "joat-vault-access-2026";
+const PRODUCT_OPTION_KEY = "joat-product-options";
 const cashApp = "$joatz_plug";
 const zelle = "payments@joatsecrets.com";
 const usdt = "TQ9xJOATvaultUSDTmanualdrop93";
+
+const readProductOptionMemory = (productId: string) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<
+      string,
+      { color?: string; size?: string }
+    >;
+    return saved[productId] ?? {};
+  } catch {
+    return {};
+  }
+};
+
+const writeProductOptionMemory = (productId: string, color: string, size: string) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<
+      string,
+      { color?: string; size?: string }
+    >;
+    localStorage.setItem(
+      PRODUCT_OPTION_KEY,
+      JSON.stringify({ ...saved, [productId]: { color, size } }),
+    );
+  } catch {
+    localStorage.setItem(PRODUCT_OPTION_KEY, JSON.stringify({ [productId]: { color, size } }));
+  }
+};
 
 const lockIn = {
   hidden: { opacity: 0, y: 36, rotateX: -18, filter: "contrast(240%) brightness(1.8)" },
@@ -170,7 +198,12 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
             placeholder="ENTER RAW ACCESS STRING"
             type="password"
           />
-          <Button variant="vault" size="vault" onClick={attemptUnlock} className="joker-card-button">
+          <Button
+            variant="vault"
+            size="vault"
+            onClick={attemptUnlock}
+            className="joker-card-button"
+          >
             <span className="glitch-text" data-text="UNLOCK">
               UNLOCK
             </span>
@@ -240,7 +273,10 @@ function VaultHub({
         </motion.div>
         <section className="relative border-y border-vault-crimson bg-background/80 py-8 shadow-vault-glow">
           <div className="mx-auto max-w-7xl px-3 sm:px-5">
-            <h2 className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl" data-text="DESIGNER FRAGRANCE">
+            <h2
+              className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl"
+              data-text="DESIGNER FRAGRANCE"
+            >
               DESIGNER FRAGRANCE
             </h2>
             <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -267,13 +303,7 @@ function LiveStockTicker() {
   );
 }
 
-function VaultHeader({
-  cartCount,
-  openCart,
-}: {
-  cartCount: number;
-  openCart: () => void;
-}) {
+function VaultHeader({ cartCount, openCart }: { cartCount: number; openCart: () => void }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
       <div className="mx-auto grid max-w-7xl grid-cols-3 items-center px-4 py-3">
@@ -286,7 +316,11 @@ function VaultHeader({
         <div className="justify-self-center font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
           J-KEY
         </div>
-        <a href="https://t.me/joatz" className="justify-self-end text-vault-wire" aria-label="Telegram @joatz">
+        <a
+          href="https://t.me/joatz"
+          className="justify-self-end text-vault-wire"
+          aria-label="Telegram @joatz"
+        >
           <Send size={20} />
         </a>
       </div>
@@ -294,13 +328,7 @@ function VaultHeader({
   );
 }
 
-function ProductCard({
-  product,
-  onAdd,
-}: {
-  product: Product;
-  onAdd: (product: Product) => void;
-}) {
+function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Product) => void }) {
   return (
     <motion.article
       variants={lockIn}
@@ -354,8 +382,13 @@ function ProductSelectionDrawer({
 
   useEffect(() => {
     if (!product) return;
-    setSelectedColor(product.colors[0] ?? "");
-    setSelectedSize(product.sizes[0] ?? "");
+    const saved = readProductOptionMemory(product.id);
+    setSelectedColor(
+      saved.color && product.colors.includes(saved.color) ? saved.color : (product.colors[0] ?? ""),
+    );
+    setSelectedSize(
+      saved.size && product.sizes.includes(saved.size) ? saved.size : (product.sizes[0] ?? ""),
+    );
   }, [product]);
 
   return (
@@ -373,9 +406,16 @@ function ProductSelectionDrawer({
               <div>
                 <p className="font-mono text-[10px] uppercase text-vault-quiet">{product.brand}</p>
                 <h3 className="font-display text-4xl uppercase leading-none">{product.name}</h3>
-                <p className="mt-1 font-mono text-sm uppercase text-vault-crimson">${product.price}</p>
+                <p className="mt-1 font-mono text-sm uppercase text-vault-crimson">
+                  ${product.price}
+                </p>
               </div>
-              <Button variant="vaultGhost" size="icon" onClick={onClose} aria-label="Close product options">
+              <Button
+                variant="vaultGhost"
+                size="icon"
+                onClick={onClose}
+                aria-label="Close product options"
+              >
                 <X />
               </Button>
             </div>
@@ -399,7 +439,10 @@ function ProductSelectionDrawer({
               variant="vault"
               size="vault"
               className="w-full"
-              onClick={() => onAdd(product, selectedColor, selectedSize)}
+              onClick={() => {
+                writeProductOptionMemory(product.id, selectedColor, selectedSize);
+                onAdd(product, selectedColor, selectedSize);
+              }}
               disabled={!selectedColor || !selectedSize}
             >
               ADD TO CART
