@@ -38,6 +38,7 @@ function Index() {
   const [unlocked, setUnlocked] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [selectingProduct, setSelectingProduct] = useState<Product | null>(null);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
   const [details, setDetails] = useState<OrderDetails>({ name: "", address: "", telegram: "" });
@@ -73,11 +74,20 @@ function Index() {
             key="vault"
             cart={cart}
             total={total}
-            addToDrop={addToDrop}
+            openProductSelector={setSelectingProduct}
             openCart={() => setCartOpen(true)}
           />
         )}
       </AnimatePresence>
+
+      <ProductSelectionDrawer
+        product={selectingProduct}
+        onClose={() => setSelectingProduct(null)}
+        onAdd={(product, selectedColor, selectedSize) => {
+          addToDrop(product, selectedColor, selectedSize);
+          setSelectingProduct(null);
+        }}
+      />
 
       <CartDrawer
         open={cartOpen}
