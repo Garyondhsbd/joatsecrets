@@ -297,6 +297,15 @@
     animation: album-spin 1.4s linear infinite;
   }
 
+  section:has(.group.relative.grid) {
+    background-image: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--vault-crimson) 10%, transparent),
+      color-mix(in oklab, var(--vault-joker-purple) 14%, transparent),
+      transparent
+    );
+  }
+
   .vault-concrete {
     background-image:
       repeating-linear-gradient(
