@@ -269,41 +269,26 @@ function LiveStockTicker() {
 
 function VaultHeader({
   cartCount,
-  total,
   openCart,
 }: {
   cartCount: number;
-  total: number;
   openCart: () => void;
 }) {
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3">
-        <div className="font-display text-3xl uppercase leading-none text-foreground sm:text-5xl">
-          JOAT SECRETS
+      <div className="mx-auto grid max-w-7xl grid-cols-3 items-center px-4 py-3">
+        <button onClick={openCart} className="relative justify-self-start" aria-label="Open cart">
+          <ShoppingBag className={cartCount === 0 ? "text-vault-crimson" : "text-vault-wire"} />
+          <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-vault-crimson px-1 font-mono text-[10px] text-primary-foreground">
+            {cartCount}
+          </span>
+        </button>
+        <div className="justify-self-center font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
+          J-KEY
         </div>
-        <nav className="flex items-center gap-2">
-          <Button
-            variant="vaultGhost"
-            size="icon"
-            onClick={openCart}
-            aria-label="Open secure drop cart"
-            className="relative"
-          >
-            <ShoppingBag className={cartCount === 0 ? "text-vault-crimson" : "text-vault-wire"} />
-            <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-vault-crimson px-1 font-mono text-[10px] text-primary-foreground">
-              {cartCount}
-            </span>
-          </Button>
-          <Button variant="vaultGhost" asChild>
-            <a href="https://t.me/joatz" className="px-3">
-              <Send size={16} />
-              <span className="hidden font-mono text-xs uppercase sm:inline">
-                ${total} // Telegram
-              </span>
-            </a>
-          </Button>
-        </nav>
+        <a href="https://t.me/joatz" className="justify-self-end text-vault-wire" aria-label="Telegram @joatz">
+          <Send size={20} />
+        </a>
       </div>
     </header>
   );
