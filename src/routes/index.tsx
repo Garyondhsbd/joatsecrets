@@ -25,9 +25,34 @@ type OrderStage = "cart" | "details" | "assigning" | "pay";
 
 const PASSWORD = "JOAT_ACCESS_2026";
 const ACCESS_KEY = "joat-vault-access-2026";
+const PRODUCT_OPTION_KEY = "joat-product-options";
 const cashApp = "$joatz_plug";
 const zelle = "payments@joatsecrets.com";
 const usdt = "TQ9xJOATvaultUSDTmanualdrop93";
+
+const readProductOptionMemory = (productId: string) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<
+      string,
+      { color?: string; size?: string }
+    >;
+    return saved[productId] ?? {};
+  } catch {
+    return {};
+  }
+};
+
+const writeProductOptionMemory = (productId: string, color: string, size: string) => {
+  try {
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<
+      string,
+      { color?: string; size?: string }
+    >;
+    localStorage.setItem(PRODUCT_OPTION_KEY, JSON.stringify({ ...saved, [productId]: { color, size } }));
+  } catch {
+    localStorage.setItem(PRODUCT_OPTION_KEY, JSON.stringify({ [productId]: { color, size } }));
+  }
+};
 
 const lockIn = {
   hidden: { opacity: 0, y: 36, rotateX: -18, filter: "contrast(240%) brightness(1.8)" },
