@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Copy, Plus, Send, ShoppingBag, X } from "lucide-react";
+import { Copy, Music2, Plus, Send, ShoppingBag, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -142,19 +142,12 @@ function Index() {
 }
 
 function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
-  const [code, setCode] = useState("");
-  const [denied, setDenied] = useState(false);
   const { scrollY } = useScroll();
   const y = useTransform(scrollY, [0, 400], [0, -90]);
 
-  const attemptUnlock = () => {
-    if (code.trim() === PASSWORD) {
-      localStorage.setItem(ACCESS_KEY, "granted");
-      onUnlock();
-      return;
-    }
-    setDenied(true);
-    window.setTimeout(() => setDenied(false), 850);
+  const enterVault = () => {
+    localStorage.setItem(ACCESS_KEY, "granted");
+    onUnlock();
   };
 
   return (
@@ -164,24 +157,20 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
       className="relative grid min-h-screen place-items-center px-5"
     >
       <motion.div style={{ y }} className="absolute inset-0 opacity-50 vault-concrete" />
-      <motion.div
-        animate={
-          denied ? { x: [-14, 12, -10, 8, 0], filter: ["none", "hue-rotate(45deg)", "none"] } : {}
-        }
-        className="relative z-10 flex w-full max-w-xl flex-col items-center text-center"
-      >
+      <motion.div className="vault-motion-field absolute inset-0" />
+      <motion.div className="relative z-10 flex w-full max-w-xl flex-col items-center text-center">
         <motion.button
           type="button"
-          onClick={attemptUnlock}
+          onClick={enterVault}
           animate={{
-            rotateY: denied ? [0, 180, 360] : [0, -8, 8, 0],
+            rotateY: [0, -8, 8, 0],
             boxShadow: [
               "0 0 20px var(--vault-crimson)",
               "0 0 80px var(--vault-joker-purple)",
               "0 0 20px var(--vault-crimson)",
             ],
           }}
-          transition={{ duration: 1.6, repeat: denied ? 0 : Infinity, ease: "linear" }}
+          transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
           className="joker-card mb-8 grid h-32 w-24 place-items-center border border-vault-crimson bg-vault-crimson font-display text-5xl text-primary-foreground"
           aria-label="Unlock vault"
         >
@@ -196,24 +185,15 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
         >
           RESTRICTED ACCESS
         </motion.h1>
-        <div className="mt-8 flex w-full border border-border bg-vault-concrete p-1 focus-within:border-vault-wire focus-within:shadow-vault-glow">
-          <input
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            onKeyDown={(event) => event.key === "Enter" && attemptUnlock()}
-            aria-label="Vault access code"
-            className="min-w-0 flex-1 bg-transparent px-4 py-4 font-mono text-foreground caret-vault-crimson outline-none placeholder:text-vault-quiet"
-            placeholder="ENTER RAW ACCESS STRING"
-            type="password"
-          />
+        <div className="mt-8 flex w-full border border-border bg-vault-concrete p-1 shadow-vault-glow">
           <Button
             variant="vault"
             size="vault"
-            onClick={attemptUnlock}
-            className="joker-card-button"
+            onClick={enterVault}
+            className="joker-card-button w-full text-2xl"
           >
-            <span className="glitch-text" data-text="UNLOCK">
-              UNLOCK
+            <span className="glitch-text" data-text="ENTER THE VAULT">
+              ENTER THE VAULT
             </span>
           </Button>
         </div>
@@ -221,7 +201,7 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
           href="https://t.me/joatz"
           className="mt-4 font-mono text-xs uppercase text-vault-quiet hover:text-vault-wire"
         >
-          {denied ? "ACCESS DENIED. TRY AGAIN (@JOATZ)" : "CLEARANCE REQUIRED // @JOATZ"}
+          NO PASSWORD // DIRECT ACCESS // @JOATZ
         </a>
       </motion.div>
     </motion.section>
