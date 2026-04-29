@@ -340,6 +340,111 @@ function ProductCard({
   );
 }
 
+function ProductSelectionDrawer({
+  product,
+  onClose,
+  onAdd,
+}: {
+  product: Product | null;
+  onClose: () => void;
+  onAdd: (product: Product, selectedColor: string, selectedSize: string) => void;
+}) {
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+
+  useEffect(() => {
+    if (!product) return;
+    setSelectedColor(product.colors[0] ?? "");
+    setSelectedSize(product.sizes[0] ?? "");
+  }, [product]);
+
+  return (
+    <AnimatePresence>
+      {product && (
+        <motion.aside
+          initial={{ y: "105%" }}
+          animate={{ y: 0 }}
+          exit={{ y: "105%" }}
+          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-vault-crimson bg-background shadow-vault-glow"
+        >
+          <div className="mx-auto max-w-3xl p-4 sm:p-6">
+            <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+              <div>
+                <p className="font-mono text-[10px] uppercase text-vault-quiet">{product.brand}</p>
+                <h3 className="font-display text-4xl uppercase leading-none">{product.name}</h3>
+                <p className="mt-1 font-mono text-sm uppercase text-vault-crimson">${product.price}</p>
+              </div>
+              <Button variant="vaultGhost" size="icon" onClick={onClose} aria-label="Close product options">
+                <X />
+              </Button>
+            </div>
+
+            <div className="grid gap-5 py-5 sm:grid-cols-2">
+              <OptionGroup
+                label="Color"
+                options={product.colors}
+                value={selectedColor}
+                onChange={setSelectedColor}
+              />
+              <OptionGroup
+                label="Size"
+                options={product.sizes}
+                value={selectedSize}
+                onChange={setSelectedSize}
+              />
+            </div>
+
+            <Button
+              variant="vault"
+              size="vault"
+              className="w-full"
+              onClick={() => onAdd(product, selectedColor, selectedSize)}
+              disabled={!selectedColor || !selectedSize}
+            >
+              ADD TO CART
+            </Button>
+          </div>
+        </motion.aside>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function OptionGroup({
+  label,
+  options,
+  value,
+  onChange,
+}: {
+  label: string;
+  options: string[];
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 font-mono text-xs uppercase text-vault-quiet">Select {label}</p>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => onChange(option)}
+            className={`border px-3 py-3 font-mono text-xs uppercase transition ${
+              value === option
+                ? "border-vault-crimson bg-vault-crimson text-primary-foreground"
+                : "border-border bg-vault-concrete text-foreground hover:border-vault-wire"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function CartDrawer(props: {
   open: boolean;
   cart: CartItem[];
