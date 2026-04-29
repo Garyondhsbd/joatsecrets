@@ -83,7 +83,7 @@ function Index() {
       <ProductSelectionDrawer
         product={selectingProduct}
         onClose={() => setSelectingProduct(null)}
-        onAdd={(product, selectedColor, selectedSize) => {
+        onAdd={(product: Product, selectedColor: string, selectedSize: string) => {
           addToDrop(product, selectedColor, selectedSize);
           setSelectingProduct(null);
         }}
