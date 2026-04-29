@@ -333,28 +333,41 @@ function VaultHeader({ cartCount, openCart }: { cartCount: number; openCart: () 
 }
 
 function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Product) => void }) {
+  const soldOut = product.stock === 0;
+
   return (
     <motion.article
       variants={lockIn}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative overflow-hidden border border-black bg-white text-black"
+      className="group relative grid overflow-hidden border border-black bg-white text-black"
     >
-      <div className="relative aspect-square overflow-hidden bg-white">
+      <div className="relative aspect-[4/3] overflow-hidden border-b border-black bg-white">
         <img
           src={product.image}
           alt={`${product.name} sourced inventory`}
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-cover opacity-100 transition duration-300 group-hover:scale-[1.03]"
+          className="h-full w-full object-contain p-2 opacity-100 transition duration-300 group-hover:scale-[1.03]"
         />
+        {soldOut && (
+          <div className="absolute inset-0 grid place-items-center bg-black/70 font-display text-4xl uppercase text-white">
+            Sold Out
+          </div>
+        )}
       </div>
-      <div className="space-y-3 p-3 sm:p-4">
+      <div className="grid gap-3 p-3 sm:p-4">
         <div>
-          <p className="font-mono text-[10px] uppercase text-black/60">{product.brand}</p>
-          <h2 className="font-display text-2xl uppercase leading-none text-black sm:text-3xl">
+          <div className="mb-2 flex items-center justify-between gap-2 font-mono text-[10px] uppercase text-black/60">
+            <span>{product.brand}</span>
+            <span>{product.id}</span>
+          </div>
+          <h2 className="min-h-[3.4rem] font-display text-2xl uppercase leading-none text-black sm:text-3xl">
             {product.name}
           </h2>
+          <p className="mt-2 font-mono text-[11px] uppercase text-black/60">
+            Sizes: {product.sizes.join(" / ")}
+          </p>
         </div>
         <div className="flex items-center justify-between">
           <p className="font-mono text-sm uppercase text-black">${product.price}</p>
@@ -362,6 +375,7 @@ function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Pr
             variant="vault"
             size="icon"
             onClick={() => onAdd(product)}
+            disabled={soldOut}
             aria-label={`Add ${product.name} to drop`}
           >
             <Plus />
