@@ -62,6 +62,8 @@ const lockIn = {
   show: { opacity: 1, y: 0, rotateX: 0, filter: "contrast(100%) brightness(1)" },
 };
 
+const productSections = ["Bape Tees", "Sp5der Hoodies", "Essentials Shorts", "Hellstar Tees", "Fragrance"];
+
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -233,8 +235,6 @@ function VaultHub({
 }) {
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 900], [0, -160]);
-  const fragranceVault = products.filter((product) => product.brand === "DESIGNER FRAGRANCE");
-  const apparelVault = products.filter((product) => product.brand !== "DESIGNER FRAGRANCE");
 
   return (
     <motion.section
@@ -260,32 +260,36 @@ function VaultHub({
             ))}
           </div>
         </div>
-        <motion.div
-          variants={{ show: { transition: { staggerChildren: 0.08 } } }}
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-80px" }}
-          className="relative mx-auto grid max-w-7xl grid-cols-2 gap-3 px-3 py-10 sm:gap-5 sm:px-5 lg:grid-cols-4"
-        >
-          {apparelVault.map((product) => (
-            <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
-          ))}
-        </motion.div>
-        <section className="relative border-y border-vault-crimson bg-background/80 py-8 shadow-vault-glow">
-          <div className="mx-auto max-w-7xl px-3 sm:px-5">
-            <h2
-              className="glitch-text font-display text-5xl uppercase leading-none text-vault-crimson sm:text-7xl"
-              data-text="DESIGNER FRAGRANCE"
-            >
-              DESIGNER FRAGRANCE
-            </h2>
-            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {fragranceVault.map((product) => (
-                <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
-              ))}
-            </div>
-          </div>
-        </section>
+        {productSections.map((section) => {
+          const sectionProducts = products.filter((product) => product.category === section);
+          if (sectionProducts.length === 0) return null;
+
+          return (
+            <section key={section} className="relative border-b border-border py-8">
+              <div className="mx-auto max-w-7xl px-3 sm:px-5">
+                <div className="mb-4 flex items-end justify-between gap-3 border-b border-border pb-2">
+                  <h2 className="font-display text-4xl uppercase leading-none text-foreground sm:text-6xl">
+                    {section}
+                  </h2>
+                  <p className="font-mono text-xs uppercase text-vault-quiet">
+                    {sectionProducts.length} items
+                  </p>
+                </div>
+                <motion.div
+                  variants={{ show: { transition: { staggerChildren: 0.05 } } }}
+                  initial="hidden"
+                  whileInView="show"
+                  viewport={{ once: true, margin: "-80px" }}
+                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
+                >
+                  {sectionProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
+                  ))}
+                </motion.div>
+              </div>
+            </section>
+          );
+        })}
       </section>
     </motion.section>
   );
