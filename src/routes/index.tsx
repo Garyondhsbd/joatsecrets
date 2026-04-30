@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Copy, Pause, Play, Plus, Send, ShoppingBag, Truck, Shield, Package, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,10 @@ import products from "@/data/products.json";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "JOAT Secrets Vault" },
-      { name: "description", content: "Restricted logistics vault for JOAT Secrets drops." },
-      { property: "og:title", content: "JOAT Secrets Vault" },
-      { property: "og:description", content: "Restricted logistics vault for JOAT Secrets drops." },
+      { title: "J.O.A.T — Source Vault" },
+      { name: "description", content: "J.O.A.T sourcing vault — designer, streetwear & fragrance drops." },
+      { property: "og:title", content: "J.O.A.T — Source Vault" },
+      { property: "og:description", content: "Designer, streetwear & fragrance — sourced direct." },
     ],
   }),
   component: Index,
@@ -25,9 +25,6 @@ type OrderStage = "cart" | "details" | "assigning" | "pay";
 
 const ACCESS_KEY = "joat-vault-access-2026";
 const PRODUCT_OPTION_KEY = "joat-product-options";
-const cashApp = "$joatz_plug";
-const zelle = "payments@joatsecrets.com";
-const usdt = "TQ9xJOATvaultUSDTmanualdrop93";
 
 const readProductOptionMemory = (productId: string) => {
   try {
@@ -56,18 +53,13 @@ const writeProductOptionMemory = (productId: string, color: string, size: string
   }
 };
 
-const lockIn = {
-  hidden: { opacity: 0, y: 36, rotateX: -18, filter: "contrast(240%) brightness(1.8)" },
-  show: { opacity: 1, y: 0, rotateX: 0, filter: "contrast(100%) brightness(1)" },
-};
-
 const productSections = [
   "Bape Tees",
   "Sp5der Hoodies",
   "Essentials Shorts",
   "Hellstar Tees",
   "Fragrance",
-];
+] as const;
 
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
@@ -78,6 +70,8 @@ function Index() {
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
   const [details, setDetails] = useState<OrderDetails>({ name: "", address: "", telegram: "" });
+  const [query, setQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<string>("All");
 
   useEffect(() => {
     setUnlocked(localStorage.getItem(ACCESS_KEY) === "granted");
@@ -102,6 +96,7 @@ function Index() {
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
+      <SpaceBackdrop />
       <AnimatePresence mode="wait">
         {!unlocked ? (
           <RestrictedGateway key="gate" onUnlock={() => setUnlocked(true)} />
@@ -109,9 +104,12 @@ function Index() {
           <VaultHub
             key="vault"
             cart={cart}
-            total={total}
             openProductDetail={setViewingProduct}
             openCart={() => setCartOpen(true)}
+            query={query}
+            setQuery={setQuery}
+            activeCategory={activeCategory}
+            setActiveCategory={setActiveCategory}
           />
         )}
       </AnimatePresence>
@@ -128,7 +126,7 @@ function Index() {
       <ProductSelectionDrawer
         product={selectingProduct}
         onClose={() => setSelectingProduct(null)}
-        onAdd={(product: Product, selectedColor: string, selectedSize: string) => {
+        onAdd={(product, selectedColor, selectedSize) => {
           addToDrop(product, selectedColor, selectedSize);
           setSelectingProduct(null);
         }}
@@ -150,67 +148,65 @@ function Index() {
   );
 }
 
+function SpaceBackdrop() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="absolute inset-0 deep-space-gradient" />
+      <div className="absolute inset-0 starfield" />
+      <div className="absolute inset-0 nebula-drift" />
+    </div>
+  );
+}
+
 function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
-  const { scrollY } = useScroll();
-  const y = useTransform(scrollY, [0, 400], [0, -90]);
+  const lockedRef = useRef(false);
 
   const enterVault = () => {
-    localStorage.setItem(ACCESS_KEY, "granted");
+    if (lockedRef.current) return;
+    lockedRef.current = true;
+    try {
+      localStorage.setItem(ACCESS_KEY, "granted");
+    } catch {}
     onUnlock();
   };
 
   return (
     <motion.section
-      exit={{ opacity: 0, scale: 1.14, rotate: 1.5, filter: "blur(10px)" }}
-      transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
-      className="relative grid min-h-screen place-items-center px-5"
+      exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="relative z-10 grid min-h-screen place-items-center px-5"
     >
-      <motion.div style={{ y }} className="absolute inset-0 opacity-50 vault-concrete" />
-      <motion.div className="vault-motion-field absolute inset-0" />
-      <motion.div className="relative z-10 flex w-full max-w-xl flex-col items-center text-center">
-        <motion.button
+      <motion.div
+        initial={{ opacity: 0, y: 24 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 flex w-full max-w-xl flex-col items-center text-center"
+      >
+        <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-vault-quiet">
+          Source · Pack · Ship
+        </p>
+        <h1 className="mt-3 font-display text-7xl uppercase leading-none text-foreground sm:text-9xl">
+          J.O.A.T
+        </h1>
+        <p className="mt-4 max-w-sm font-body text-sm text-vault-quiet">
+          Jack of all trades. Master of the source. Designer, streetwear & fragrance — sourced
+          direct.
+        </p>
+
+        <button
           type="button"
           onClick={enterVault}
-          animate={{
-            rotateY: [0, -8, 8, 0],
-            boxShadow: [
-              "0 0 20px var(--vault-crimson)",
-              "0 0 80px var(--vault-joker-purple)",
-              "0 0 20px var(--vault-crimson)",
-            ],
-          }}
-          transition={{ duration: 1.6, repeat: Infinity, ease: "linear" }}
-          className="joker-card mb-8 grid h-32 w-24 place-items-center border border-vault-crimson bg-vault-crimson font-display text-5xl text-primary-foreground"
-          aria-label="Unlock vault"
+          className="enter-cta group relative mt-10 inline-flex items-center justify-center overflow-hidden border border-white/20 bg-white px-12 py-5 font-display text-2xl uppercase tracking-[0.25em] text-black transition-transform duration-200 active:scale-[0.98]"
         >
-          🃏
-        </motion.button>
-        <motion.h1
-          initial={{ opacity: 0 }}
-          animate={{ opacity: [0, 1, 0.3, 1] }}
-          transition={{ duration: 0.3 }}
-          className="glitch-text font-display text-6xl uppercase leading-none sm:text-8xl"
-          data-text="RESTRICTED ACCESS"
-        >
-          RESTRICTED ACCESS
-        </motion.h1>
-        <div className="mt-8 flex w-full border border-border bg-vault-concrete p-1 shadow-vault-glow">
-          <Button
-            variant="vault"
-            size="vault"
-            onClick={enterVault}
-            className="joker-card-button w-full text-2xl"
-          >
-            <span className="glitch-text" data-text="ENTER THE VAULT">
-              ENTER THE VAULT
-            </span>
-          </Button>
-        </div>
+          <span className="relative z-10">Enter</span>
+          <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+        </button>
+
         <a
           href="https://t.me/joatz"
-          className="mt-4 font-mono text-xs uppercase text-vault-quiet hover:text-vault-wire"
+          className="mt-6 font-mono text-[10px] uppercase tracking-[0.3em] text-vault-quiet hover:text-foreground"
         >
-          NO PASSWORD // DIRECT ACCESS // @JOATZ
+          Telegram · @joatz
         </a>
       </motion.div>
     </motion.section>
@@ -219,97 +215,240 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
 
 function VaultHub({
   cart,
-  total,
   openProductDetail,
   openCart,
+  query,
+  setQuery,
+  activeCategory,
+  setActiveCategory,
 }: {
   cart: CartItem[];
-  total: number;
   openProductDetail: (product: Product) => void;
   openCart: () => void;
+  query: string;
+  setQuery: (q: string) => void;
+  activeCategory: string;
+  setActiveCategory: (c: string) => void;
 }) {
-  const { scrollY } = useScroll();
-  const bgY = useTransform(scrollY, [0, 900], [0, -160]);
-  const gridY = useTransform(scrollY, [0, 1600], [0, 260]);
-  const pulseY = useTransform(scrollY, [0, 1600], [0, -220]);
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return products.filter((p) => {
+      const inCat = activeCategory === "All" || p.category === activeCategory;
+      if (!inCat) return false;
+      if (!q) return true;
+      return (
+        p.name.toLowerCase().includes(q) ||
+        p.brand.toLowerCase().includes(q) ||
+        p.category.toLowerCase().includes(q)
+      );
+    });
+  }, [query, activeCategory]);
+
+  const sectionsToRender =
+    activeCategory === "All" ? productSections : ([activeCategory] as readonly string[]);
 
   return (
     <motion.section
       initial={{ opacity: 0 }}
-      animate={{ opacity: [0, 1, 0.65, 1] }}
-      transition={{ duration: 0.32 }}
-      className="relative min-h-screen"
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.4 }}
+      className="relative z-10 min-h-screen"
     >
-      <motion.div
-        style={{ y: bgY }}
-        className="pointer-events-none fixed inset-0 vault-concrete opacity-30"
+      <VaultHeader
+        cartCount={cart.length}
+        openCart={openCart}
+        query={query}
+        setQuery={setQuery}
+        activeCategory={activeCategory}
+        setActiveCategory={setActiveCategory}
       />
-      <motion.div
-        style={{ y: gridY }}
-        className="vault-motion-field pointer-events-none fixed inset-0"
-      />
-      <motion.div
-        style={{ y: pulseY }}
-        className="vault-scroll-pulse pointer-events-none fixed inset-0"
-      />
-      <VaultHeader cartCount={cart.length} openCart={openCart} />
       <BackgroundMusic />
-      <LiveStockTicker />
-      <section className="relative pt-24">
-        <div className="overflow-hidden border-y border-border bg-vault-concrete py-10">
-          <div className="marquee-track flex w-max gap-8 font-display text-[16vw] uppercase leading-none text-foreground sm:text-[11vw]">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <span key={index}>
-                JACK OF ALL TRADES. MASTER OF THE SOURCE. LOGISTICS KING. THE PLUG. JOIN THE
-                TELEGRAM.
-              </span>
-            ))}
-          </div>
-        </div>
-        {productSections.map((section) => {
-          const sectionProducts = products.filter((product) => product.category === section);
-          if (sectionProducts.length === 0) return null;
 
-          return (
-            <section key={section} className="relative border-b border-border py-8">
-              <div className="mx-auto max-w-7xl px-3 sm:px-5">
-                <div className="mb-4 flex items-end justify-between gap-3 border-b border-border pb-2">
-                  <h2 className="font-display text-4xl uppercase leading-none text-foreground sm:text-6xl">
-                    {section}
-                  </h2>
-                  <p className="font-mono text-xs uppercase text-vault-quiet">
-                    {sectionProducts.length} items
-                  </p>
-                </div>
-                <motion.div
-                  variants={{ show: { transition: { staggerChildren: 0.05 } } }}
-                  initial="hidden"
-                  whileInView="show"
-                  viewport={{ once: true, margin: "-80px" }}
-                  className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
-                >
-                  {sectionProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} onOpen={openProductDetail} />
-                  ))}
-                </motion.div>
-              </div>
-            </section>
-          );
-        })}
+      <section className="relative pt-8">
+        {query.trim() ? (
+          <CatalogueGrid
+            title={`Search · "${query}"`}
+            count={filtered.length}
+            items={filtered}
+            onOpen={openProductDetail}
+          />
+        ) : (
+          sectionsToRender.map((section) => {
+            const sectionProducts = filtered.filter((p) => p.category === section);
+            if (sectionProducts.length === 0) return null;
+            return (
+              <CatalogueGrid
+                key={section}
+                title={section}
+                count={sectionProducts.length}
+                items={sectionProducts}
+                onOpen={openProductDetail}
+              />
+            );
+          })
+        )}
+
+        {query.trim() && filtered.length === 0 && (
+          <p className="mx-auto max-w-7xl px-4 py-20 text-center font-mono text-sm uppercase text-vault-quiet">
+            Nothing matches "{query}"
+          </p>
+        )}
       </section>
+
+      <footer className="relative border-t border-white/10 py-10 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-vault-quiet">
+        J.O.A.T · Source Vault · Telegram @joatz
+      </footer>
     </motion.section>
   );
 }
 
-function LiveStockTicker() {
+function CatalogueGrid({
+  title,
+  count,
+  items,
+  onOpen,
+}: {
+  title: string;
+  count: number;
+  items: Product[];
+  onOpen: (product: Product) => void;
+}) {
   return (
-    <div className="sticky top-[65px] z-20 overflow-hidden border-b border-vault-crimson bg-vault-crimson py-2 shadow-vault-glow">
-      <div className="stock-ticker flex w-max gap-8 font-display text-2xl uppercase leading-none text-primary-foreground">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <span key={index}>CHROME HEARTS DROP LIVE - 2 MINUTES REMAINING</span>
-        ))}
+    <section className="relative py-8">
+      <div className="mx-auto max-w-7xl px-3 sm:px-5">
+        <div className="mb-5 flex items-end justify-between gap-3 border-b border-white/10 pb-3">
+          <h2 className="font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
+            {title}
+          </h2>
+          <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-vault-quiet">
+            {count} {count === 1 ? "item" : "items"}
+          </p>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {items.map((product) => (
+            <ProductCard key={product.id} product={product} onOpen={onOpen} />
+          ))}
+        </div>
       </div>
-    </div>
+    </section>
+  );
+}
+
+function VaultHeader({
+  cartCount,
+  openCart,
+  query,
+  setQuery,
+  activeCategory,
+  setActiveCategory,
+}: {
+  cartCount: number;
+  openCart: () => void;
+  query: string;
+  setQuery: (q: string) => void;
+  activeCategory: string;
+  setActiveCategory: (c: string) => void;
+}) {
+  const [navOpen, setNavOpen] = useState(false);
+  const categories = ["All", ...productSections];
+
+  return (
+    <header className="sticky top-0 z-30 border-b border-white/10 bg-background/85 backdrop-blur-md">
+      <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
+        <button
+          onClick={() => setNavOpen((v) => !v)}
+          className="grid h-9 w-9 place-items-center text-foreground/80 hover:text-foreground md:hidden"
+          aria-label="Open menu"
+        >
+          <Menu size={20} />
+        </button>
+
+        <a href="/" className="font-display text-3xl uppercase leading-none text-foreground sm:text-4xl">
+          J.O.A.T
+        </a>
+
+        <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => setActiveCategory(c)}
+              className={`px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] transition ${
+                activeCategory === c
+                  ? "bg-white text-black"
+                  : "text-foreground/60 hover:text-foreground"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </nav>
+
+        <div className="ml-auto flex items-center gap-2">
+          <div className="relative hidden sm:block">
+            <Search
+              size={14}
+              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
+            />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search drops…"
+              className="w-56 border border-white/15 bg-white/5 py-2 pl-9 pr-3 font-mono text-xs text-foreground placeholder:text-foreground/40 focus:border-white/40 focus:outline-none"
+            />
+          </div>
+          <a
+            href="https://t.me/joatz"
+            className="hidden h-9 w-9 place-items-center text-foreground/70 hover:text-foreground sm:grid"
+            aria-label="Telegram"
+          >
+            <Send size={18} />
+          </a>
+          <button
+            onClick={openCart}
+            className="relative grid h-9 w-9 place-items-center text-foreground hover:text-white"
+            aria-label="Open cart"
+          >
+            <ShoppingBag size={20} />
+            {cartCount > 0 && (
+              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-white px-1 font-mono text-[9px] text-black">
+                {cartCount}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile search + categories */}
+      <div className="border-t border-white/10 px-4 py-2 md:hidden">
+        <div className="relative mb-2">
+          <Search
+            size={14}
+            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
+          />
+          <input
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search drops…"
+            className="w-full border border-white/15 bg-white/5 py-2 pl-9 pr-3 font-mono text-xs text-foreground placeholder:text-foreground/40 focus:border-white/40 focus:outline-none"
+          />
+        </div>
+        <div className={`flex gap-2 overflow-x-auto pb-1 ${navOpen ? "flex-wrap" : ""}`}>
+          {categories.map((c) => (
+            <button
+              key={c}
+              onClick={() => setActiveCategory(c)}
+              className={`shrink-0 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] transition ${
+                activeCategory === c
+                  ? "bg-white text-black"
+                  : "border border-white/15 text-foreground/70"
+              }`}
+            >
+              {c}
+            </button>
+          ))}
+        </div>
+      </div>
+    </header>
   );
 }
 
@@ -329,84 +468,77 @@ function BackgroundMusic() {
     ctxRef.current = ctx;
     await ctx.resume();
 
-    // Master with gentle filter + reverb-ish delay for warmth
     const master = ctx.createGain();
-    master.gain.value = 0.18;
+    master.gain.value = 0.22;
     const lpf = ctx.createBiquadFilter();
     lpf.type = "lowpass";
-    lpf.frequency.value = 2400;
-    lpf.Q.value = 0.7;
-
-    const delay = ctx.createDelay();
-    delay.delayTime.value = 0.38;
-    const feedback = ctx.createGain();
-    feedback.gain.value = 0.28;
-    const wet = ctx.createGain();
-    wet.gain.value = 0.25;
-
+    lpf.frequency.value = 3800;
     master.connect(lpf);
     lpf.connect(ctx.destination);
-    lpf.connect(delay);
-    delay.connect(feedback);
-    feedback.connect(delay);
-    delay.connect(wet);
-    wet.connect(ctx.destination);
 
-    // Slow lo-fi chord progression in A minor: Am – Fmaj7 – Cmaj7 – G
-    // (root, third, fifth, optional 7th) — frequencies in Hz
-    const chords: number[][] = [
-      [220.0, 261.63, 329.63], // Am
-      [174.61, 220.0, 261.63, 329.63], // Fmaj7
-      [261.63, 329.63, 392.0, 493.88], // Cmaj7
-      [196.0, 246.94, 293.66], // G
-    ];
-
-    const playChord = (freqs: number[], when: number, dur: number) => {
-      freqs.forEach((f, i) => {
-        const osc = ctx.createOscillator();
-        const g = ctx.createGain();
-        osc.type = i === 0 ? "triangle" : "sine";
-        osc.frequency.value = f;
-        // gentle detune for warmth
-        osc.detune.value = (Math.random() - 0.5) * 6;
-        g.gain.setValueAtTime(0, when);
-        g.gain.linearRampToValueAtTime(0.12 / freqs.length, when + 0.6);
-        g.gain.linearRampToValueAtTime(0.08 / freqs.length, when + dur - 0.4);
-        g.gain.linearRampToValueAtTime(0, when + dur);
-        osc.connect(g);
-        g.connect(master);
-        osc.start(when);
-        osc.stop(when + dur + 0.1);
-      });
+    // 808 sub-bass — drill style sliding bass
+    const play808 = (when: number, freq: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq * 2, when);
+      osc.frequency.exponentialRampToValueAtTime(freq, when + 0.05);
+      g.gain.setValueAtTime(0, when);
+      g.gain.linearRampToValueAtTime(0.5, when + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.001, when + dur);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(when);
+      osc.stop(when + dur + 0.05);
     };
 
-    // Soft kick on beat 1 of each bar — warm, not harsh
+    // Punchy kick
     const playKick = (when: number) => {
       const osc = ctx.createOscillator();
       const g = ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(80, when);
-      osc.frequency.exponentialRampToValueAtTime(38, when + 0.15);
+      osc.frequency.setValueAtTime(150, when);
+      osc.frequency.exponentialRampToValueAtTime(40, when + 0.12);
       g.gain.setValueAtTime(0, when);
-      g.gain.linearRampToValueAtTime(0.18, when + 0.01);
-      g.gain.exponentialRampToValueAtTime(0.001, when + 0.32);
+      g.gain.linearRampToValueAtTime(0.55, when + 0.005);
+      g.gain.exponentialRampToValueAtTime(0.001, when + 0.28);
       osc.connect(g);
       g.connect(master);
       osc.start(when);
-      osc.stop(when + 0.35);
+      osc.stop(when + 0.32);
     };
 
-    // Soft side-stick / snare on beat 3
-    const playSnare = (when: number) => {
-      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+    // Crisp hi-hat
+    const playHat = (when: number, open = false) => {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
       const d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.05));
+      for (let i = 0; i < d.length; i++)
+        d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * (open ? 0.05 : 0.012)));
+      const src = ctx.createBufferSource();
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.value = 7200;
+      const g = ctx.createGain();
+      g.gain.value = open ? 0.1 : 0.13;
+      src.buffer = buf;
+      src.connect(hp);
+      hp.connect(g);
+      g.connect(master);
+      src.start(when);
+    };
+
+    // Snare / clap on 2 & 4
+    const playSnare = (when: number) => {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.22, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++)
+        d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.06));
       const src = ctx.createBufferSource();
       const bp = ctx.createBiquadFilter();
       bp.type = "bandpass";
-      bp.frequency.value = 1800;
+      bp.frequency.value = 1700;
       const g = ctx.createGain();
-      g.gain.value = 0.06;
+      g.gain.value = 0.18;
       src.buffer = buf;
       src.connect(bp);
       bp.connect(g);
@@ -414,19 +546,75 @@ function BackgroundMusic() {
       src.start(when);
     };
 
-    const barDur = 4.0; // 4 seconds per chord (slow, calm)
+    // Dark minor pad
+    const playPad = (when: number, freq: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sawtooth";
+      osc.frequency.value = freq;
+      osc.detune.value = (Math.random() - 0.5) * 8;
+      const f = ctx.createBiquadFilter();
+      f.type = "lowpass";
+      f.frequency.value = 700;
+      f.Q.value = 4;
+      g.gain.setValueAtTime(0, when);
+      g.gain.linearRampToValueAtTime(0.05, when + 0.6);
+      g.gain.linearRampToValueAtTime(0, when + dur);
+      osc.connect(f);
+      f.connect(g);
+      g.connect(master);
+      osc.start(when);
+      osc.stop(when + dur + 0.1);
+    };
+
+    // 140 BPM drill — 16th note hats, kick on 1 & 3, snare on 2 & 4, sliding 808s
+    const bpm = 140;
+    const beat = 60 / bpm; // ~0.428s
+    const sixteenth = beat / 4;
+    const barDur = beat * 4;
+    // 808 pattern in C minor: C2(65.4), Eb2(77.8), G2(98.0), Bb2(116.5)
+    const bassPattern = [
+      [0, 65.4, beat * 1.5],
+      [beat * 1.5, 77.8, beat * 1.0],
+      [beat * 2.5, 98.0, beat * 1.5],
+    ];
+    // Pad notes per bar (cycles)
+    const padCycle = [
+      [130.8, 155.6, 196.0], // Cm
+      [123.5, 146.8, 185.0], // Bdim-ish
+      [138.6, 174.6, 207.7], // Db
+      [130.8, 155.6, 196.0], // Cm
+    ];
+
     let bar = 0;
     const schedule = () => {
-      const now = ctx.currentTime;
-      // schedule the next 2 bars ahead
-      for (let i = 0; i < 2; i++) {
-        const when = now + i * barDur + 0.05;
-        const chord = chords[(bar + i) % chords.length];
-        playChord(chord, when, barDur);
-        playKick(when);
-        playKick(when + barDur / 2);
-        playSnare(when + barDur / 4);
-        playSnare(when + (3 * barDur) / 4);
+      const now = ctx.currentTime + 0.05;
+      // schedule 2 bars ahead
+      for (let b = 0; b < 2; b++) {
+        const barStart = now + b * barDur;
+        // pad
+        padCycle[(bar + b) % padCycle.length].forEach((f) => playPad(barStart, f, barDur));
+        // kicks
+        playKick(barStart);
+        playKick(barStart + beat * 2);
+        playKick(barStart + beat * 2 + sixteenth * 2); // syncopated
+        // snares
+        playSnare(barStart + beat);
+        playSnare(barStart + beat * 3);
+        // hats — 16th notes with occasional rolls
+        for (let i = 0; i < 16; i++) {
+          const t = barStart + i * sixteenth;
+          if (i % 2 === 0) playHat(t);
+          else if (Math.random() < 0.55) playHat(t);
+          if (i === 11) {
+            // triplet roll
+            playHat(t + sixteenth / 3);
+            playHat(t + (2 * sixteenth) / 3);
+          }
+          if (i === 7) playHat(t, true);
+        }
+        // 808 bass
+        bassPattern.forEach(([off, f, d]) => play808(barStart + off, f, d));
       }
       bar += 2;
     };
@@ -435,17 +623,16 @@ function BackgroundMusic() {
 
     cleanupRef.current = () => {
       window.clearInterval(iv);
-      master.gain.cancelScheduledValues(ctx.currentTime);
-      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+      try {
+        master.gain.cancelScheduledValues(ctx.currentTime);
+        master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.25);
+      } catch {}
       window.setTimeout(() => {
         try {
           master.disconnect();
           lpf.disconnect();
-          delay.disconnect();
-          feedback.disconnect();
-          wet.disconnect();
         } catch {}
-      }, 400);
+      }, 350);
     };
 
     setPlaying(true);
@@ -459,57 +646,36 @@ function BackgroundMusic() {
     <button
       type="button"
       onClick={toggle}
-      className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-black/20 bg-white/95 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black shadow-lg backdrop-blur transition hover:shadow-xl"
+      className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-white/15 bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white shadow-2xl backdrop-blur-md transition hover:border-white/40"
       aria-label={playing ? "Pause music" : "Play music"}
     >
-      <span className={`relative grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-black text-white ${playing ? "album-spin" : ""}`}>
-        <span className="absolute inset-1 rounded-full border border-white/20" />
-        <span className="absolute inset-3 rounded-full bg-white/80" />
-        <span className="absolute h-1 w-1 rounded-full bg-black" />
+      <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full">
+        <span className={`album-disc-art ${playing ? "is-spinning" : ""}`} />
       </span>
       <span className="flex flex-col items-start leading-tight">
-        <span className="text-black">JOAT FM</span>
-        <span className="text-black/50">{playing ? "Now Playing" : "Tap to Play"}</span>
+        <span className="text-white">J.O.A.T FM</span>
+        <span className="text-white/50">{playing ? "On Air" : "Tap to Play"}</span>
       </span>
       {playing ? <Pause size={14} /> : <Play size={14} />}
     </button>
   );
 }
 
-function VaultHeader({ cartCount, openCart }: { cartCount: number; openCart: () => void }) {
-  return (
-    <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur-sm">
-      <div className="mx-auto grid max-w-7xl grid-cols-3 items-center px-4 py-3">
-        <button onClick={openCart} className="relative justify-self-start" aria-label="Open cart">
-          <ShoppingBag className={cartCount === 0 ? "text-vault-crimson" : "text-vault-wire"} />
-          <span className="absolute -right-2 -top-2 grid h-5 min-w-5 place-items-center bg-vault-crimson px-1 font-mono text-[10px] text-primary-foreground">
-            {cartCount}
-          </span>
-        </button>
-        <div className="justify-self-center font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
-          J-KEY
-        </div>
-        <a
-          href="https://t.me/joatz"
-          className="justify-self-end text-vault-wire"
-          aria-label="Telegram @joatz"
-        >
-          <Send size={20} />
-        </a>
-      </div>
-    </header>
-  );
-}
-
-function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: Product) => void }) {
-  const soldOut = product.stock === 0;
-
+function ProductCard({
+  product,
+  onOpen,
+}: {
+  product: Product;
+  onOpen: (product: Product) => void;
+}) {
   return (
     <motion.article
-      variants={lockIn}
-      transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -4 }}
-      className="group relative grid cursor-pointer overflow-hidden border border-black/10 bg-white text-black shadow-sm transition-shadow hover:shadow-xl"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      whileHover={{ y: -3 }}
+      className="group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-foreground shadow-lg transition-all duration-300 hover:border-white/30 hover:shadow-[0_10px_40px_-10px_rgba(120,140,255,0.4)]"
       onClick={() => onOpen(product)}
       role="button"
       tabIndex={0}
@@ -520,38 +686,30 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: 
         }
       }}
     >
-      <div className="relative aspect-square overflow-hidden bg-white">
+      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-white/[0.01]">
         <img
           src={product.image}
           alt={product.name}
-          width={1024}
-          height={1024}
           loading="lazy"
-          className="h-full w-full object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
         />
-        {soldOut && (
-          <div className="absolute inset-0 grid place-items-center bg-white/85 font-display text-3xl uppercase tracking-widest text-black">
-            Sold Out
-          </div>
-        )}
-        <div className="absolute left-3 top-3 bg-black px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-white">
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-90" />
+        <div className="absolute left-2 top-2 bg-white/95 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-black">
           {product.brand}
         </div>
+        <div className="absolute bottom-2 right-2 translate-y-2 bg-white px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-black opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+          Quick view →
+        </div>
       </div>
-      <div className="grid gap-2 border-t border-black/10 p-4">
-        <h3 className="font-display text-2xl uppercase leading-tight tracking-wide text-black">
+      <div className="grid gap-1 border-t border-white/10 p-3">
+        <h3 className="font-display text-lg uppercase leading-tight tracking-wide text-foreground line-clamp-1">
           {product.name}
         </h3>
         <div className="flex items-end justify-between gap-2">
-          <div>
-            <p className="font-mono text-[10px] uppercase tracking-widest text-black/50">
-              {product.sizes.length} sizes · {product.colors.length} color{product.colors.length > 1 ? "s" : ""}
-            </p>
-            <p className="mt-1 font-display text-xl text-black">${product.price}</p>
-          </div>
-          <span className="font-mono text-[10px] uppercase tracking-widest text-black/50 underline-offset-4 group-hover:underline">
-            View →
-          </span>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-foreground/45">
+            {product.sizes.length} sz · {product.colors.length} clr
+          </p>
+          <p className="font-display text-xl text-foreground">${product.price}</p>
         </div>
       </div>
     </motion.article>
@@ -565,29 +723,29 @@ const productCopy: Record<string, { tagline: string; description: string; detail
       "Heavyweight cotton construction with signature BAPE branding. Sourced direct, deadstock guaranteed authentic.",
     details: ["100% premium cotton", "Boxed and tagged", "Authenticated source", "Ships within 48h"],
   },
-  Sp5der: {
-    tagline: "Sp5der Worldwide — Young Thug's signature line.",
+  SP5DER: {
+    tagline: "Sp5der Worldwide — signature web graphics.",
     description:
       "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
     details: ["French terry interior", "Rhinestone graphics", "Oversized streetwear fit", "Authentic Sp5der tags"],
   },
-  Essentials: {
+  ESSENTIALS: {
     tagline: "Fear of God Essentials — elevated minimalism.",
     description:
       "Refined silhouette in muted tones. The everyday staple from Jerry Lorenzo's diffusion line.",
     details: ["Heavyweight cotton blend", "Relaxed athletic cut", "Tonal rubberized branding", "Original packaging"],
   },
-  Hellstar: {
+  HELLSTAR: {
     tagline: "Hellstar Studios — LA cult graphic apparel.",
     description:
       "Garment-dyed heavyweight tee with bold front and back graphics. Limited drops, no restocks.",
     details: ["Heavyweight 240gsm cotton", "Vintage wash treatment", "Front + back prints", "Hellstar holographic tag"],
   },
-  Fragrance: {
+  "DESIGNER FRAGRANCE": {
     tagline: "Designer fragrance — sealed, batch-coded, authentic.",
     description:
-      "100ml EDP unless noted. All bottles sealed in original cellophane with verified batch codes.",
-    details: ["100ml Eau de Parfum", "Sealed in cellophane", "Batch code verified", "Original retail box"],
+      "Sealed in original cellophane with verified batch codes. Original retail packaging.",
+    details: ["Eau de Parfum", "Sealed in cellophane", "Batch code verified", "Original retail box"],
   },
 };
 
@@ -619,80 +777,80 @@ function ProductDetailDialog({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-3 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-3 backdrop-blur-md"
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 24, opacity: 0, scale: 0.98 }}
+            initial={{ y: 20, opacity: 0, scale: 0.98 }}
             animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 24, opacity: 0, scale: 0.98 }}
+            exit={{ y: 20, opacity: 0, scale: 0.98 }}
             transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative grid max-h-[92dvh] w-full max-w-4xl grid-cols-1 overflow-hidden bg-white text-black shadow-2xl md:grid-cols-2"
+            className="relative grid max-h-[92dvh] w-full max-w-4xl grid-cols-1 overflow-hidden border border-white/10 bg-card text-foreground shadow-2xl md:grid-cols-2"
             onClick={(e) => e.stopPropagation()}
           >
             <button
               onClick={onClose}
               aria-label="Close"
-              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center bg-white/90 text-black shadow transition hover:bg-black hover:text-white"
+              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center bg-white/95 text-black shadow transition hover:bg-white"
             >
               <X size={18} />
             </button>
 
-            <div className="relative aspect-square overflow-hidden bg-white md:aspect-auto">
+            <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-white/[0.04] to-transparent md:aspect-auto">
               <img
                 src={product.image}
                 alt={product.name}
-                className="h-full w-full object-contain p-6"
+                className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute left-4 top-4 bg-black px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-white">
+              <div className="absolute left-4 top-4 bg-white/95 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-black">
                 {product.brand}
               </div>
             </div>
 
             <div className="flex max-h-[92dvh] flex-col overflow-y-auto p-6 md:p-8">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-black/50">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
                 {product.category} · {product.id}
               </p>
-              <h2 className="mt-2 font-display text-4xl uppercase leading-tight tracking-wide text-black sm:text-5xl">
+              <h2 className="mt-2 font-display text-4xl uppercase leading-tight tracking-wide sm:text-5xl">
                 {product.name}
               </h2>
-              <p className="mt-3 font-display text-3xl text-black">${product.price}</p>
+              <p className="mt-3 font-display text-3xl">${product.price}</p>
 
-              <p className="mt-5 font-body text-sm leading-relaxed text-black/80">
+              <p className="mt-5 font-body text-sm leading-relaxed text-foreground/80">
                 {productCopy[product.brand]?.tagline}
               </p>
-              <p className="mt-2 font-body text-sm leading-relaxed text-black/70">
+              <p className="mt-2 font-body text-sm leading-relaxed text-foreground/65">
                 {productCopy[product.brand]?.description}
               </p>
 
               <div className="mt-5 grid gap-2">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-black/50">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
                   Available
                 </p>
                 <div className="flex flex-wrap gap-2 font-mono text-xs">
                   {product.sizes.map((s) => (
-                    <span key={s} className="border border-black/20 px-2 py-1">
+                    <span key={s} className="border border-white/15 px-2 py-1">
                       {s}
                     </span>
                   ))}
                 </div>
-                <div className="mt-1 flex flex-wrap gap-2 font-mono text-xs text-black/70">
+                <div className="mt-1 flex flex-wrap gap-2 font-mono text-xs text-foreground/65">
                   {product.colors.map((c) => (
                     <span key={c}>· {c}</span>
                   ))}
                 </div>
               </div>
 
-              <ul className="mt-5 grid gap-2 border-t border-black/10 pt-4 font-body text-sm text-black/80">
+              <ul className="mt-5 grid gap-2 border-t border-white/10 pt-4 font-body text-sm text-foreground/80">
                 {(productCopy[product.brand]?.details ?? []).map((d) => (
                   <li key={d} className="flex items-start gap-2">
-                    <span className="mt-2 inline-block h-1 w-1 bg-black" />
+                    <span className="mt-2 inline-block h-1 w-1 bg-foreground" />
                     {d}
                   </li>
                 ))}
               </ul>
 
-              <div className="mt-5 grid grid-cols-3 gap-3 border-y border-black/10 py-4 text-center font-mono text-[9px] uppercase tracking-widest text-black/60">
+              <div className="mt-5 grid grid-cols-3 gap-3 border-y border-white/10 py-4 text-center font-mono text-[9px] uppercase tracking-widest text-foreground/60">
                 <div className="grid place-items-center gap-1"><Truck size={16} /> 48h ship</div>
                 <div className="grid place-items-center gap-1"><Shield size={16} /> Authentic</div>
                 <div className="grid place-items-center gap-1"><Package size={16} /> Tagged</div>
@@ -700,12 +858,11 @@ function ProductDetailDialog({
 
               <button
                 onClick={() => onConfigure(product)}
-                disabled={product.stock === 0}
-                className="mt-5 w-full bg-black py-4 font-display text-xl uppercase tracking-widest text-white transition hover:bg-black/85 disabled:opacity-40"
+                className="mt-5 w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90"
               >
-                {product.stock === 0 ? "Sold Out" : "Add to Cart"}
+                Add to Cart
               </button>
-              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-black/40">
+              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-foreground/40">
                 Select size & color on next step
               </p>
             </div>
@@ -747,23 +904,16 @@ function ProductSelectionDrawer({
           animate={{ y: 0 }}
           exit={{ y: "105%" }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-vault-crimson bg-background shadow-vault-glow"
+          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/15 bg-card shadow-2xl"
         >
           <div className="mx-auto max-w-3xl p-4 sm:p-6">
-            <div className="flex items-start justify-between gap-4 border-b border-border pb-4">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <p className="font-mono text-[10px] uppercase text-vault-quiet">{product.brand}</p>
-                <h3 className="font-display text-4xl uppercase leading-none">{product.name}</h3>
-                <p className="mt-1 font-mono text-sm uppercase text-vault-crimson">
-                  ${product.price}
-                </p>
+                <p className="font-mono text-[10px] uppercase text-foreground/50">{product.brand}</p>
+                <h3 className="font-display text-3xl uppercase leading-none">{product.name}</h3>
+                <p className="mt-1 font-mono text-sm uppercase">${product.price}</p>
               </div>
-              <Button
-                variant="vaultGhost"
-                size="icon"
-                onClick={onClose}
-                aria-label="Close product options"
-              >
+              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
                 <X />
               </Button>
             </div>
@@ -783,18 +933,16 @@ function ProductSelectionDrawer({
               />
             </div>
 
-            <Button
-              variant="vault"
-              size="vault"
-              className="w-full"
+            <button
               onClick={() => {
                 writeProductOptionMemory(product.id, selectedColor, selectedSize);
                 onAdd(product, selectedColor, selectedSize);
               }}
               disabled={!selectedColor || !selectedSize}
+              className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90 disabled:opacity-40"
             >
-              ADD TO CART
-            </Button>
+              Add to Cart
+            </button>
           </div>
         </motion.aside>
       )}
@@ -815,7 +963,7 @@ function OptionGroup({
 }) {
   return (
     <div>
-      <p className="mb-2 font-mono text-xs uppercase text-vault-quiet">Select {label}</p>
+      <p className="mb-2 font-mono text-xs uppercase text-foreground/50">Select {label}</p>
       <div className="grid grid-cols-2 gap-2">
         {options.map((option) => (
           <button
@@ -824,8 +972,8 @@ function OptionGroup({
             onClick={() => onChange(option)}
             className={`border px-3 py-3 font-mono text-xs uppercase transition ${
               value === option
-                ? "border-vault-crimson bg-vault-crimson text-primary-foreground"
-                : "border-border bg-vault-concrete text-foreground hover:border-vault-wire"
+                ? "border-white bg-white text-black"
+                : "border-white/15 bg-white/5 text-foreground hover:border-white/40"
             }`}
           >
             {option}
@@ -863,7 +1011,7 @@ function CartDrawer(props: {
   const telegramMessage = useMemo(
     () =>
       encodeURIComponent(
-        `JOAT DROP HANDOFF\nOrder: ${orderId}\nItems:\n${cart
+        `JOAT ORDER\nOrder: ${orderId}\nItems:\n${cart
           .map((item) => `${item.name} / ${item.selectedColor} / ${item.selectedSize}`)
           .join("\n")}\nTotal: $${total}\nTelegram: ${details.telegram}`,
       ),
@@ -878,22 +1026,24 @@ function CartDrawer(props: {
           animate={{ x: 0 }}
           exit={{ x: "105%" }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed right-0 top-0 z-50 flex h-dvh w-full max-w-md flex-col border-l border-vault-crimson bg-vault-concrete shadow-vault-glow vault-concrete"
+          className="fixed right-0 top-0 z-50 flex h-dvh w-full max-w-md flex-col border-l border-white/15 bg-card shadow-2xl"
         >
-          <div className="flex items-center justify-between border-b border-border p-4">
+          <div className="flex items-center justify-between border-b border-white/10 p-4">
             <div>
-              <p className="font-display text-4xl uppercase leading-none">DROP CART</p>
-              <p className="font-mono text-xs uppercase text-vault-quiet">SEEKING SOURCE...</p>
+              <p className="font-display text-3xl uppercase leading-none">Cart</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+                Sourcing direct
+              </p>
             </div>
-            <Button variant="vaultGhost" size="icon" onClick={onClose} aria-label="Close cart">
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close cart">
               <X />
             </Button>
           </div>
-          <div className="h-2 bg-background">
+          <div className="h-1 bg-background">
             <motion.div
               initial={{ width: "0%" }}
               animate={{ width: stage === "pay" ? "100%" : stage === "assigning" ? "72%" : "34%" }}
-              className="h-full bg-vault-crimson"
+              className="h-full bg-white"
             />
           </div>
           <div className="flex-1 overflow-y-auto p-4">
@@ -904,8 +1054,8 @@ function CartDrawer(props: {
               <DetailsForm details={details} setDetails={setDetails} onSubmit={onSubmitDetails} />
             )}
             {stage === "assigning" && (
-              <div className="grid h-full place-items-center font-display text-4xl uppercase text-vault-crimson">
-                ASSIGNING DEEP-SOURCE ID...
+              <div className="grid h-full place-items-center font-display text-3xl uppercase text-foreground/80">
+                Assigning order id…
               </div>
             )}
             {stage === "pay" && (
@@ -927,48 +1077,34 @@ function CartList({
   total: number;
   onSecure: () => void;
 }) {
-  const secureMessage = encodeURIComponent(
-    `JOAT DROP REQUEST\n${cart
-      .map((item) => `${item.id} - ${item.name} / ${item.selectedColor} / ${item.selectedSize}`)
-      .join("\n")}\nTotal: $${total}`,
-  );
-
   return (
     <div className="space-y-4">
       {cart.length === 0 ? (
-        <p className="font-mono uppercase text-vault-quiet">NO DROP RESERVED.</p>
+        <p className="font-mono uppercase text-foreground/50">Cart is empty.</p>
       ) : (
         cart.map((item, index) => (
           <div
             key={`${item.id}-${index}`}
-            className="flex justify-between border-b border-border pb-3 font-mono text-sm uppercase"
+            className="flex justify-between border-b border-white/10 pb-3 font-mono text-xs uppercase"
           >
             <span>
-              {item.id} // {item.name} // {item.selectedColor} // {item.selectedSize}
+              {item.name} · {item.selectedColor} · {item.selectedSize}
             </span>
-            <span className="text-vault-crimson">${item.price}</span>
+            <span>${item.price}</span>
           </div>
         ))
       )}
-      <div className="flex justify-between font-display text-4xl uppercase">
+      <div className="flex justify-between font-display text-3xl uppercase">
         <span>Total</span>
-        <span className="text-vault-crimson">${total}</span>
+        <span>${total}</span>
       </div>
-      {cart.length === 0 ? (
-        <Button variant="vault" size="vault" className="w-full" disabled onClick={onSecure}>
-          <span className="glitch-text" data-text="SECURE THE DROP">
-            SECURE THE DROP
-          </span>
-        </Button>
-      ) : (
-        <Button variant="vault" size="vault" className="w-full" asChild>
-          <a href={`https://t.me/joatz?text=${secureMessage}`}>
-            <span className="glitch-text" data-text="SECURE THE DROP">
-              SECURE THE DROP
-            </span>
-          </a>
-        </Button>
-      )}
+      <button
+        onClick={onSecure}
+        disabled={cart.length === 0}
+        className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90 disabled:opacity-40"
+      >
+        Checkout
+      </button>
     </div>
   );
 }
@@ -982,37 +1118,31 @@ function DetailsForm({
   setDetails: (details: OrderDetails) => void;
   onSubmit: () => void;
 }) {
-  const valid = details.name.trim() && details.address.trim() && details.telegram.trim();
   return (
     <form
-      className="space-y-4"
-      onSubmit={(event) => {
-        event.preventDefault();
-        if (valid) onSubmit();
+      onSubmit={(e) => {
+        e.preventDefault();
+        onSubmit();
       }}
+      className="grid gap-4"
     >
-      <p className="font-display text-4xl uppercase">LOGISTICS SECURED. SEND PAYMENT NOW.</p>
       {(["name", "address", "telegram"] as const).map((field) => (
-        <label key={field} className="block font-mono text-xs uppercase text-vault-quiet">
-          {field === "telegram" ? "Telegram Handle" : field}
+        <label key={field} className="grid gap-1 font-mono text-xs uppercase text-foreground/60">
+          {field}
           <input
-            value={details[field]}
-            onChange={(event) =>
-              setDetails({
-                ...details,
-                [field]: event.target.value.slice(0, field === "address" ? 180 : 60),
-              })
-            }
-            className="mt-2 w-full border border-border bg-background px-3 py-4 font-mono text-foreground caret-vault-crimson outline-none focus:border-vault-wire"
             required
+            value={details[field]}
+            onChange={(e) => setDetails({ ...details, [field]: e.target.value })}
+            className="border border-white/15 bg-white/5 px-3 py-3 font-mono text-sm text-foreground focus:border-white/40 focus:outline-none"
           />
         </label>
       ))}
-      <Button variant="vault" size="vault" className="w-full" type="submit" disabled={!valid}>
-        <span className="glitch-text" data-text="SUBMIT DETAILS">
-          SUBMIT DETAILS
-        </span>
-      </Button>
+      <button
+        type="submit"
+        className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90"
+      >
+        Submit
+      </button>
     </form>
   );
 }
@@ -1026,40 +1156,19 @@ function PayScreen({
   total: number;
   telegramMessage: string;
 }) {
-  const copy = (value: string) => navigator.clipboard?.writeText(value);
-  const rows = [
-    ["Order ID", orderId],
-    ["Total Due", `$${total}`],
-    ["CashApp", cashApp],
-    ["Zelle", zelle],
-    ["USDT", usdt],
-  ];
   return (
-    <div className="space-y-4">
-      <p className="font-display text-5xl uppercase leading-none">DROP RESERVED.</p>
-      {rows.map(([label, value]) => (
-        <button
-          key={label}
-          onClick={() => copy(value)}
-          className="flex w-full items-center justify-between border border-border bg-background p-3 text-left font-mono uppercase text-vault-quiet hover:border-vault-wire hover:text-foreground"
-        >
-          <span>
-            {label}:{" "}
-            <b className={label === "Total Due" ? "text-vault-crimson" : "text-foreground"}>
-              {value}
-            </b>
-          </span>
-          <Copy size={16} />
-        </button>
-      ))}
-      <Button variant="vault" size="vault" className="w-full" asChild>
-        <a href={`https://t.me/joatz?text=${telegramMessage}`}>
-          <Send />{" "}
-          <span className="glitch-text" data-text="MESSAGE @JOATZ">
-            MESSAGE @JOATZ
-          </span>
-        </a>
-      </Button>
+    <div className="grid gap-4 font-mono text-xs uppercase">
+      <p className="font-display text-3xl">Order {orderId}</p>
+      <p>Total: ${total}</p>
+      <p className="text-foreground/60">
+        Send confirmation via Telegram to finalize your drop.
+      </p>
+      <a
+        href={`https://t.me/joatz?text=${telegramMessage}`}
+        className="block w-full bg-white py-4 text-center font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90"
+      >
+        Open Telegram
+      </a>
     </div>
   );
 }
