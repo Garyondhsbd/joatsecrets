@@ -4,10 +4,17 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "Bape x Chrome Black",
-    "price": 90,
+    "price": 80,
     "stock": 8,
-    "colors": ["Black"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Black"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/bape-x-chrome-black.jpg"
   },
   {
@@ -15,10 +22,17 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "Red Bape Tee Shirt",
-    "price": 85,
+    "price": 80,
     "stock": 8,
-    "colors": ["White / Red"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "White / Red"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/red-bape-tee.jpg"
   },
   {
@@ -26,10 +40,17 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "Burberry Bape Tee",
-    "price": 90,
+    "price": 80,
     "stock": 8,
-    "colors": ["Black / Plaid"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Black / Plaid"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/burberry-bape-tee.jpg"
   },
   {
@@ -37,10 +58,16 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "White Miami Bape Tee",
-    "price": 85,
+    "price": 80,
     "stock": 6,
-    "colors": ["White Camo"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "White Camo"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/white-miami-bape-tee.jpg"
   },
   {
@@ -48,10 +75,17 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "Bape x Chrome White",
-    "price": 90,
+    "price": 80,
     "stock": 8,
-    "colors": ["White"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "White"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/bape-x-chrome-white.jpg"
   },
   {
@@ -59,10 +93,17 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "Pink Bape Tee Shirt",
-    "price": 85,
+    "price": 80,
     "stock": 8,
-    "colors": ["White / Pink Camo"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "White / Pink Camo"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/pink-bape-tee-shirt.jpg"
   },
   {
@@ -70,10 +111,16 @@
     "brand": "BAPE",
     "category": "Bape Tees",
     "name": "Pink Miami Bape Tee",
-    "price": 85,
+    "price": 80,
     "stock": 6,
-    "colors": ["Pink Camo"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Pink Camo"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/pink-miami-bape-tee.jpg"
   },
   {
@@ -81,10 +128,17 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "OG WEB Black",
-    "price": 155,
+    "price": 100,
     "stock": 8,
-    "colors": ["Black"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Black"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/og-web-black.jpg"
   },
   {
@@ -92,10 +146,17 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "Green Sp5der Hoodie",
-    "price": 155,
+    "price": 100,
     "stock": 8,
-    "colors": ["Green"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Green"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/green-sp5der-hoodie.jpg"
   },
   {
@@ -103,10 +164,16 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "TC Blue Sp5der",
-    "price": 155,
+    "price": 100,
     "stock": 6,
-    "colors": ["Blue"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Blue"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/tc-blue-sp5der.jpg"
   },
   {
@@ -114,10 +181,16 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "Gray & Green Sp5der",
-    "price": 155,
+    "price": 100,
     "stock": 6,
-    "colors": ["Gray / Green"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Gray / Green"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/gray-green-sp5der.jpg"
   },
   {
@@ -125,10 +198,16 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "V1 Pink Sp5der",
-    "price": 155,
+    "price": 100,
     "stock": 5,
-    "colors": ["Pink"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Pink"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/v1-pink-sp5der.jpg"
   },
   {
@@ -136,10 +215,16 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "OG Gray Sp5der",
-    "price": 155,
+    "price": 100,
     "stock": 9,
-    "colors": ["Gray"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Gray"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/og-gray-sp5der.jpg"
   },
   {
@@ -147,10 +232,16 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "OG Black Pink Sp5der",
-    "price": 155,
+    "price": 100,
     "stock": 5,
-    "colors": ["Black / Pink"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Black / Pink"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/og-black-pink-sp5der.jpg"
   },
   {
@@ -158,10 +249,16 @@
     "brand": "SP5DER",
     "category": "Sp5der Hoodies",
     "name": "Sky Blue Sp5der",
-    "price": 155,
+    "price": 100,
     "stock": 5,
-    "colors": ["Sky Blue"],
-    "sizes": ["S", "M", "L"],
+    "colors": [
+      "Sky Blue"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/sky-blue-sp5der.jpg"
   },
   {
@@ -169,10 +266,17 @@
     "brand": "ESSENTIALS",
     "category": "Essentials Shorts",
     "name": "Essentials S22 Dark OAT",
-    "price": 75,
+    "price": 60,
     "stock": 6,
-    "colors": ["Dark Oat"],
-    "sizes": ["XS", "S", "M", "L"],
+    "colors": [
+      "Dark Oat"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/essentials-s22-dark-oat.jpg"
   },
   {
@@ -180,10 +284,17 @@
     "brand": "ESSENTIALS",
     "category": "Essentials Shorts",
     "name": "Essentials S22 Stretch Limo",
-    "price": 75,
+    "price": 60,
     "stock": 6,
-    "colors": ["Stretch Limo"],
-    "sizes": ["XS", "S", "M", "L"],
+    "colors": [
+      "Stretch Limo"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/essentials-s22-stretch-limo.jpg"
   },
   {
@@ -191,10 +302,17 @@
     "brand": "ESSENTIALS",
     "category": "Essentials Shorts",
     "name": "Essentials S22 Light Oatmeal",
-    "price": 75,
+    "price": 60,
     "stock": 6,
-    "colors": ["Light Oatmeal"],
-    "sizes": ["XS", "S", "M", "L"],
+    "colors": [
+      "Light Oatmeal"
+    ],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L"
+    ],
     "image": "/products/actual/essentials-s22-light-oatmeal.jpg"
   },
   {
@@ -202,10 +320,17 @@
     "brand": "HELLSTAR",
     "category": "Hellstar Tees",
     "name": "Hellstar No Guts x Glory",
-    "price": 120,
+    "price": 65,
     "stock": 8,
-    "colors": ["White / Pink"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "White / Pink"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/hellstar-no-guts-glory.jpg"
   },
   {
@@ -213,10 +338,17 @@
     "brand": "HELLSTAR",
     "category": "Hellstar Tees",
     "name": "Hellstar Breaking News",
-    "price": 120,
+    "price": 65,
     "stock": 8,
-    "colors": ["White / Purple"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "White / Purple"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/hellstar-breaking-news.jpg"
   },
   {
@@ -224,10 +356,17 @@
     "brand": "HELLSTAR",
     "category": "Hellstar Tees",
     "name": "Hellstar Classic Tee",
-    "price": 110,
+    "price": 65,
     "stock": 8,
-    "colors": ["Cream"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Cream"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/hellstar-classic-tee.jpg"
   },
   {
@@ -235,10 +374,17 @@
     "brand": "HELLSTAR",
     "category": "Hellstar Tees",
     "name": "Hellstar VVS Black/White",
-    "price": 110,
+    "price": 65,
     "stock": 8,
-    "colors": ["Black / White"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Black / White"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/hellstar-vvs-black-white.jpg"
   },
   {
@@ -246,10 +392,17 @@
     "brand": "HELLSTAR",
     "category": "Hellstar Tees",
     "name": "Hellstar Knock Out Tee",
-    "price": 120,
+    "price": 65,
     "stock": 8,
-    "colors": ["Black / Multi"],
-    "sizes": ["S", "M", "L", "XL"],
+    "colors": [
+      "Black / Multi"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "image": "/products/actual/hellstar-knock-out-tee.jpg"
   },
   {
@@ -259,8 +412,13 @@
     "name": "Baccarat Rouge 540",
     "price": 145,
     "stock": 7,
-    "colors": ["BR540"],
-    "sizes": ["35ml", "70ml"],
+    "colors": [
+      "BR540"
+    ],
+    "sizes": [
+      "35ml",
+      "70ml"
+    ],
     "image": "/products/actual/baccarat-rouge-540.jpg"
   },
   {
@@ -270,8 +428,13 @@
     "name": "Creed Aventus",
     "price": 135,
     "stock": 9,
-    "colors": ["Aventus"],
-    "sizes": ["50ml", "100ml"],
+    "colors": [
+      "Aventus"
+    ],
+    "sizes": [
+      "50ml",
+      "100ml"
+    ],
     "image": "/products/actual/creed-aventus.jpg"
   },
   {
@@ -281,8 +444,13 @@
     "name": "Valentino Born In Roma",
     "price": 125,
     "stock": 7,
-    "colors": ["Born In Roma"],
-    "sizes": ["50ml", "100ml"],
+    "colors": [
+      "Born In Roma"
+    ],
+    "sizes": [
+      "50ml",
+      "100ml"
+    ],
     "image": "/products/actual/valentino-born-in-roma.jpg"
   },
   {
@@ -292,8 +460,13 @@
     "name": "Prada Paradoxe",
     "price": 120,
     "stock": 7,
-    "colors": ["Paradoxe"],
-    "sizes": ["50ml", "90ml"],
+    "colors": [
+      "Paradoxe"
+    ],
+    "sizes": [
+      "50ml",
+      "90ml"
+    ],
     "image": "/products/actual/prada-paradoxe.jpg"
   },
   {
@@ -303,8 +476,13 @@
     "name": "Valentino Coral Fantasy",
     "price": 125,
     "stock": 7,
-    "colors": ["Coral Fantasy"],
-    "sizes": ["50ml", "100ml"],
+    "colors": [
+      "Coral Fantasy"
+    ],
+    "sizes": [
+      "50ml",
+      "100ml"
+    ],
     "image": "/products/actual/valentino-coral-fantasy.jpg"
   },
   {
@@ -314,8 +492,13 @@
     "name": "Dior Sauvage Elixir",
     "price": 135,
     "stock": 7,
-    "colors": ["Elixir"],
-    "sizes": ["60ml", "100ml"],
+    "colors": [
+      "Elixir"
+    ],
+    "sizes": [
+      "60ml",
+      "100ml"
+    ],
     "image": "/products/actual/dior-sauvage-elixir.jpg"
   },
   {
@@ -325,8 +508,13 @@
     "name": "JPG Le Male Elixir",
     "price": 125,
     "stock": 7,
-    "colors": ["Elixir"],
-    "sizes": ["75ml", "125ml"],
+    "colors": [
+      "Elixir"
+    ],
+    "sizes": [
+      "75ml",
+      "125ml"
+    ],
     "image": "/products/actual/jpg-le-male-elixir.jpg"
   },
   {
@@ -336,8 +524,13 @@
     "name": "YSL EDP",
     "price": 125,
     "stock": 7,
-    "colors": ["EDP"],
-    "sizes": ["60ml", "100ml"],
+    "colors": [
+      "EDP"
+    ],
+    "sizes": [
+      "60ml",
+      "100ml"
+    ],
     "image": "/products/actual/ysl-edp.jpg"
   },
   {
@@ -347,8 +540,12 @@
     "name": "LV California Dream",
     "price": 145,
     "stock": 7,
-    "colors": ["California Dream"],
-    "sizes": ["100ml"],
+    "colors": [
+      "California Dream"
+    ],
+    "sizes": [
+      "100ml"
+    ],
     "image": "/products/actual/lv-california-dream.jpg"
   },
   {
@@ -358,8 +555,12 @@
     "name": "LV Imagination",
     "price": 145,
     "stock": 7,
-    "colors": ["Imagination"],
-    "sizes": ["100ml"],
+    "colors": [
+      "Imagination"
+    ],
+    "sizes": [
+      "100ml"
+    ],
     "image": "/products/actual/lv-imagination.jpg"
   }
 ]
