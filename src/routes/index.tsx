@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Copy, Plus, Send, ShoppingBag, X } from "lucide-react";
+import { Copy, Pause, Play, Plus, Send, ShoppingBag, Truck, Shield, Package, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -74,6 +74,7 @@ function Index() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectingProduct, setSelectingProduct] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
   const [details, setDetails] = useState<OrderDetails>({ name: "", address: "", telegram: "" });
@@ -100,7 +101,7 @@ function Index() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-background text-foreground vault-noise">
+    <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <AnimatePresence mode="wait">
         {!unlocked ? (
           <RestrictedGateway key="gate" onUnlock={() => setUnlocked(true)} />
@@ -109,11 +110,20 @@ function Index() {
             key="vault"
             cart={cart}
             total={total}
-            openProductSelector={setSelectingProduct}
+            openProductDetail={setViewingProduct}
             openCart={() => setCartOpen(true)}
           />
         )}
       </AnimatePresence>
+
+      <ProductDetailDialog
+        product={viewingProduct}
+        onClose={() => setViewingProduct(null)}
+        onConfigure={(product) => {
+          setViewingProduct(null);
+          setSelectingProduct(product);
+        }}
+      />
 
       <ProductSelectionDrawer
         product={selectingProduct}
@@ -210,12 +220,12 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
 function VaultHub({
   cart,
   total,
-  openProductSelector,
+  openProductDetail,
   openCart,
 }: {
   cart: CartItem[];
   total: number;
-  openProductSelector: (product: Product) => void;
+  openProductDetail: (product: Product) => void;
   openCart: () => void;
 }) {
   const { scrollY } = useScroll();
@@ -279,7 +289,7 @@ function VaultHub({
                   className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
                   {sectionProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
+                    <ProductCard key={product.id} product={product} onOpen={openProductDetail} />
                   ))}
                 </motion.div>
               </div>
@@ -304,116 +314,164 @@ function LiveStockTicker() {
 }
 
 function BackgroundMusic() {
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const nodesRef = useRef<{ stop: () => void }[]>([]);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
 
-  const stopMusic = () => {
-    nodesRef.current.forEach((node) => node.stop());
-    nodesRef.current = [];
+  const stop = () => {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
     setPlaying(false);
   };
 
-  const toggleMusic = async () => {
-    if (playing) {
-      stopMusic();
-      return;
-    }
+  const start = async () => {
+    const ctx = ctxRef.current ?? new AudioContext();
+    ctxRef.current = ctx;
+    await ctx.resume();
 
-    const context = audioContextRef.current ?? new AudioContext();
-    audioContextRef.current = context;
-    await context.resume();
+    // Master with gentle filter + reverb-ish delay for warmth
+    const master = ctx.createGain();
+    master.gain.value = 0.18;
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = "lowpass";
+    lpf.frequency.value = 2400;
+    lpf.Q.value = 0.7;
 
-    const master = context.createGain();
-    const compressor = context.createDynamicsCompressor();
-    master.gain.value = 0.012;
-    master.connect(compressor);
-    compressor.connect(context.destination);
+    const delay = ctx.createDelay();
+    delay.delayTime.value = 0.38;
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.28;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.25;
 
-    const makeTone = (frequency: number, type: OscillatorType, gainValue: number) => {
-      const oscillator = context.createOscillator();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      oscillator.type = type;
-      oscillator.frequency.value = frequency;
-      filter.type = "lowpass";
-      filter.frequency.value = 420;
-      gain.gain.value = gainValue;
-      oscillator.connect(filter);
-      filter.connect(gain);
-      gain.connect(master);
-      oscillator.start();
-      nodesRef.current.push({
-        stop: () => {
-          gain.gain.setTargetAtTime(0, context.currentTime, 0.04);
-          window.setTimeout(() => oscillator.stop(), 140);
-        },
+    master.connect(lpf);
+    lpf.connect(ctx.destination);
+    lpf.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(wet);
+    wet.connect(ctx.destination);
+
+    // Slow lo-fi chord progression in A minor: Am – Fmaj7 – Cmaj7 – G
+    // (root, third, fifth, optional 7th) — frequencies in Hz
+    const chords: number[][] = [
+      [220.0, 261.63, 329.63], // Am
+      [174.61, 220.0, 261.63, 329.63], // Fmaj7
+      [261.63, 329.63, 392.0, 493.88], // Cmaj7
+      [196.0, 246.94, 293.66], // G
+    ];
+
+    const playChord = (freqs: number[], when: number, dur: number) => {
+      freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = i === 0 ? "triangle" : "sine";
+        osc.frequency.value = f;
+        // gentle detune for warmth
+        osc.detune.value = (Math.random() - 0.5) * 6;
+        g.gain.setValueAtTime(0, when);
+        g.gain.linearRampToValueAtTime(0.12 / freqs.length, when + 0.6);
+        g.gain.linearRampToValueAtTime(0.08 / freqs.length, when + dur - 0.4);
+        g.gain.linearRampToValueAtTime(0, when + dur);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(when);
+        osc.stop(when + dur + 0.1);
       });
     };
 
-    const kick = () => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(92, context.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(42, context.currentTime + 0.16);
-      gain.gain.setValueAtTime(0.08, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.22);
-      oscillator.connect(gain);
-      gain.connect(master);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.24);
+    // Soft kick on beat 1 of each bar — warm, not harsh
+    const playKick = (when: number) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(80, when);
+      osc.frequency.exponentialRampToValueAtTime(38, when + 0.15);
+      g.gain.setValueAtTime(0, when);
+      g.gain.linearRampToValueAtTime(0.18, when + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, when + 0.32);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(when);
+      osc.stop(when + 0.35);
     };
 
-    const hat = () => {
-      const bufferSize = context.sampleRate * 0.035;
-      const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let index = 0; index < bufferSize; index += 1) data[index] = Math.random() * 2 - 1;
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      filter.type = "highpass";
-      filter.frequency.value = 7200;
-      gain.gain.value = 0.012;
-      source.buffer = buffer;
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(master);
-      source.start();
+    // Soft side-stick / snare on beat 3
+    const playSnare = (when: number) => {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.05));
+      const src = ctx.createBufferSource();
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 1800;
+      const g = ctx.createGain();
+      g.gain.value = 0.06;
+      src.buffer = buf;
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(master);
+      src.start(when);
     };
 
-    makeTone(49, "sine", 0.28);
-    makeTone(73.42, "triangle", 0.09);
+    const barDur = 4.0; // 4 seconds per chord (slow, calm)
+    let bar = 0;
+    const schedule = () => {
+      const now = ctx.currentTime;
+      // schedule the next 2 bars ahead
+      for (let i = 0; i < 2; i++) {
+        const when = now + i * barDur + 0.05;
+        const chord = chords[(bar + i) % chords.length];
+        playChord(chord, when, barDur);
+        playKick(when);
+        playKick(when + barDur / 2);
+        playSnare(when + barDur / 4);
+        playSnare(when + (3 * barDur) / 4);
+      }
+      bar += 2;
+    };
+    schedule();
+    const iv = window.setInterval(schedule, barDur * 2 * 1000 - 100);
 
-    const beat = window.setInterval(() => {
-      kick();
-      window.setTimeout(hat, 145);
-      window.setTimeout(hat, 290);
-      window.setTimeout(kick, 435);
-      window.setTimeout(hat, 580);
-    }, 720);
-
-    nodesRef.current.push({ stop: () => window.clearInterval(beat) });
+    cleanupRef.current = () => {
+      window.clearInterval(iv);
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+      window.setTimeout(() => {
+        try {
+          master.disconnect();
+          lpf.disconnect();
+          delay.disconnect();
+          feedback.disconnect();
+          wet.disconnect();
+        } catch {}
+      }, 400);
+    };
 
     setPlaying(true);
   };
 
-  useEffect(() => stopMusic, []);
+  const toggle = () => (playing ? stop() : start());
+
+  useEffect(() => () => cleanupRef.current?.(), []);
 
   return (
     <button
       type="button"
-      onClick={toggleMusic}
-      className="album-disc fixed bottom-4 left-4 z-30 grid h-20 w-20 place-items-center overflow-hidden border border-vault-crimson bg-background text-primary-foreground shadow-vault-glow"
-      aria-label={playing ? "Stop background music" : "Play background music"}
+      onClick={toggle}
+      className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-black/20 bg-white/95 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black shadow-lg backdrop-blur transition hover:shadow-xl"
+      aria-label={playing ? "Pause music" : "Play music"}
     >
-      <span className={playing ? "album-disc-art is-spinning" : "album-disc-art"}>
-        <span className="text-[10px] font-display uppercase leading-none">JOAT</span>
+      <span className={`relative grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-black text-white ${playing ? "album-spin" : ""}`}>
+        <span className="absolute inset-1 rounded-full border border-white/20" />
+        <span className="absolute inset-3 rounded-full bg-white/80" />
+        <span className="absolute h-1 w-1 rounded-full bg-black" />
       </span>
-      <span className="absolute bottom-1 font-mono text-[8px] uppercase tracking-[0.18em]">
-        {playing ? "Playing" : "Tap"}
+      <span className="flex flex-col items-start leading-tight">
+        <span className="text-black">JOAT FM</span>
+        <span className="text-black/50">{playing ? "Now Playing" : "Tap to Play"}</span>
       </span>
+      {playing ? <Pause size={14} /> : <Play size={14} />}
     </button>
   );
 }
@@ -443,57 +501,218 @@ function VaultHeader({ cartCount, openCart }: { cartCount: number; openCart: () 
   );
 }
 
-function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Product) => void }) {
+function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: Product) => void }) {
   const soldOut = product.stock === 0;
 
   return (
     <motion.article
       variants={lockIn}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative grid overflow-hidden border border-black bg-white text-black"
+      whileHover={{ y: -4 }}
+      className="group relative grid cursor-pointer overflow-hidden border border-black/10 bg-white text-black shadow-sm transition-shadow hover:shadow-xl"
+      onClick={() => onOpen(product)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(product);
+        }
+      }}
     >
-      <div className="relative aspect-[4/3] overflow-hidden border-b border-black bg-white">
+      <div className="relative aspect-square overflow-hidden bg-white">
         <img
           src={product.image}
-          alt={`${product.name} sourced inventory`}
+          alt={product.name}
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-contain p-0 opacity-100 scale-[1.75] transition duration-300 group-hover:scale-[1.9]"
+          className="h-full w-full object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-105"
         />
         {soldOut && (
-          <div className="absolute inset-0 grid place-items-center bg-black/70 font-display text-4xl uppercase text-white">
+          <div className="absolute inset-0 grid place-items-center bg-white/85 font-display text-3xl uppercase tracking-widest text-black">
             Sold Out
           </div>
         )}
-      </div>
-      <div className="grid gap-3 p-3 sm:p-4">
-        <div>
-          <div className="mb-2 flex items-center justify-between gap-2 font-mono text-[10px] uppercase text-black/60">
-            <span>{product.brand}</span>
-            <span>{product.id}</span>
-          </div>
-          <h2 className="min-h-[3.4rem] font-display text-2xl uppercase leading-none text-black sm:text-3xl">
-            {product.name}
-          </h2>
-          <p className="mt-2 font-mono text-[11px] uppercase text-black/60">
-            Sizes: {product.sizes.join(" / ")}
-          </p>
+        <div className="absolute left-3 top-3 bg-black px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-white">
+          {product.brand}
         </div>
-        <div className="flex items-center justify-between">
-          <p className="font-mono text-sm uppercase text-black">${product.price}</p>
-          <Button
-            variant="vault"
-            size="icon"
-            onClick={() => onAdd(product)}
-            disabled={soldOut}
-            aria-label={`Add ${product.name} to drop`}
-          >
-            <Plus />
-          </Button>
+      </div>
+      <div className="grid gap-2 border-t border-black/10 p-4">
+        <h3 className="font-display text-2xl uppercase leading-tight tracking-wide text-black">
+          {product.name}
+        </h3>
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-black/50">
+              {product.sizes.length} sizes · {product.colors.length} color{product.colors.length > 1 ? "s" : ""}
+            </p>
+            <p className="mt-1 font-display text-xl text-black">${product.price}</p>
+          </div>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/50 underline-offset-4 group-hover:underline">
+            View →
+          </span>
         </div>
       </div>
     </motion.article>
+  );
+}
+
+const productCopy: Record<string, { tagline: string; description: string; details: string[] }> = {
+  BAPE: {
+    tagline: "A Bathing Ape — Tokyo streetwear royalty.",
+    description:
+      "Heavyweight cotton construction with signature BAPE branding. Sourced direct, deadstock guaranteed authentic.",
+    details: ["100% premium cotton", "Boxed and tagged", "Authenticated source", "Ships within 48h"],
+  },
+  Sp5der: {
+    tagline: "Sp5der Worldwide — Young Thug's signature line.",
+    description:
+      "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
+    details: ["French terry interior", "Rhinestone graphics", "Oversized streetwear fit", "Authentic Sp5der tags"],
+  },
+  Essentials: {
+    tagline: "Fear of God Essentials — elevated minimalism.",
+    description:
+      "Refined silhouette in muted tones. The everyday staple from Jerry Lorenzo's diffusion line.",
+    details: ["Heavyweight cotton blend", "Relaxed athletic cut", "Tonal rubberized branding", "Original packaging"],
+  },
+  Hellstar: {
+    tagline: "Hellstar Studios — LA cult graphic apparel.",
+    description:
+      "Garment-dyed heavyweight tee with bold front and back graphics. Limited drops, no restocks.",
+    details: ["Heavyweight 240gsm cotton", "Vintage wash treatment", "Front + back prints", "Hellstar holographic tag"],
+  },
+  Fragrance: {
+    tagline: "Designer fragrance — sealed, batch-coded, authentic.",
+    description:
+      "100ml EDP unless noted. All bottles sealed in original cellophane with verified batch codes.",
+    details: ["100ml Eau de Parfum", "Sealed in cellophane", "Batch code verified", "Original retail box"],
+  },
+};
+
+function ProductDetailDialog({
+  product,
+  onClose,
+  onConfigure,
+}: {
+  product: Product | null;
+  onClose: () => void;
+  onConfigure: (product: Product) => void;
+}) {
+  useEffect(() => {
+    if (!product) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [product, onClose]);
+
+  return (
+    <AnimatePresence>
+      {product && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-3 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ y: 24, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 24, opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="relative grid max-h-[92dvh] w-full max-w-4xl grid-cols-1 overflow-hidden bg-white text-black shadow-2xl md:grid-cols-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center bg-white/90 text-black shadow transition hover:bg-black hover:text-white"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="relative aspect-square overflow-hidden bg-white md:aspect-auto">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-contain p-6"
+              />
+              <div className="absolute left-4 top-4 bg-black px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-white">
+                {product.brand}
+              </div>
+            </div>
+
+            <div className="flex max-h-[92dvh] flex-col overflow-y-auto p-6 md:p-8">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-black/50">
+                {product.category} · {product.id}
+              </p>
+              <h2 className="mt-2 font-display text-4xl uppercase leading-tight tracking-wide text-black sm:text-5xl">
+                {product.name}
+              </h2>
+              <p className="mt-3 font-display text-3xl text-black">${product.price}</p>
+
+              <p className="mt-5 font-body text-sm leading-relaxed text-black/80">
+                {productCopy[product.brand]?.tagline}
+              </p>
+              <p className="mt-2 font-body text-sm leading-relaxed text-black/70">
+                {productCopy[product.brand]?.description}
+              </p>
+
+              <div className="mt-5 grid gap-2">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-black/50">
+                  Available
+                </p>
+                <div className="flex flex-wrap gap-2 font-mono text-xs">
+                  {product.sizes.map((s) => (
+                    <span key={s} className="border border-black/20 px-2 py-1">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-2 font-mono text-xs text-black/70">
+                  {product.colors.map((c) => (
+                    <span key={c}>· {c}</span>
+                  ))}
+                </div>
+              </div>
+
+              <ul className="mt-5 grid gap-2 border-t border-black/10 pt-4 font-body text-sm text-black/80">
+                {(productCopy[product.brand]?.details ?? []).map((d) => (
+                  <li key={d} className="flex items-start gap-2">
+                    <span className="mt-2 inline-block h-1 w-1 bg-black" />
+                    {d}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-5 grid grid-cols-3 gap-3 border-y border-black/10 py-4 text-center font-mono text-[9px] uppercase tracking-widest text-black/60">
+                <div className="grid place-items-center gap-1"><Truck size={16} /> 48h ship</div>
+                <div className="grid place-items-center gap-1"><Shield size={16} /> Authentic</div>
+                <div className="grid place-items-center gap-1"><Package size={16} /> Tagged</div>
+              </div>
+
+              <button
+                onClick={() => onConfigure(product)}
+                disabled={product.stock === 0}
+                className="mt-5 w-full bg-black py-4 font-display text-xl uppercase tracking-widest text-white transition hover:bg-black/85 disabled:opacity-40"
+              >
+                {product.stock === 0 ? "Sold Out" : "Add to Cart"}
+              </button>
+              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-black/40">
+                Select size & color on next step
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 

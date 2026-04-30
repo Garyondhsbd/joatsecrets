@@ -1,6 +1,7 @@
 @import "tailwindcss" source(none);
 @source "../src";
 @import "tw-animate-css";
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 @custom-variant dark (&:is(.dark *));
 
@@ -111,9 +112,9 @@
   --vault-joker-purple: oklch(0.33 0.18 310);
   --vault-wire: oklch(0.72 0.28 28);
   --vault-quiet: oklch(0.511 0 0);
-  --font-display: Impact, Anton, Haettenschweiler, "Arial Narrow Bold", sans-serif;
-  --font-mono: "Roboto Mono", "Major Mono Display", "Courier New", monospace;
-  --font-body: Inter, Roboto, Arial, sans-serif;
+  --font-display: "Bebas Neue", Impact, Anton, sans-serif;
+  --font-mono: "JetBrains Mono", "Roboto Mono", "Courier New", monospace;
+  --font-body: "Inter", system-ui, -apple-system, sans-serif;
   --shadow-vault-glow:
     0 0 0 1px var(--vault-crimson),
     0 0 28px color-mix(in oklab, var(--vault-wire) 55%, transparent),
@@ -295,6 +296,10 @@
 
   .album-disc-art.is-spinning {
     animation: album-spin 1.4s linear infinite;
+  }
+
+  .album-spin {
+    animation: album-spin 3s linear infinite;
   }
 
   section:has(.group.relative.grid) {
