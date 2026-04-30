@@ -298,6 +298,10 @@
     animation: album-spin 1.4s linear infinite;
   }
 
+  .album-spin {
+    animation: album-spin 3s linear infinite;
+  }
+
   section:has(.group.relative.grid) {
     background-image: linear-gradient(
       180deg,
