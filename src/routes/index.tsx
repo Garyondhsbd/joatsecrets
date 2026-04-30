@@ -289,7 +289,7 @@ function VaultHub({
                   className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4"
                 >
                   {sectionProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} onAdd={openProductSelector} />
+                    <ProductCard key={product.id} product={product} onOpen={openProductDetail} />
                   ))}
                 </motion.div>
               </div>
