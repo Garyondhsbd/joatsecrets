@@ -453,57 +453,218 @@ function VaultHeader({ cartCount, openCart }: { cartCount: number; openCart: () 
   );
 }
 
-function ProductCard({ product, onAdd }: { product: Product; onAdd: (product: Product) => void }) {
+function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: Product) => void }) {
   const soldOut = product.stock === 0;
 
   return (
     <motion.article
       variants={lockIn}
       transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
-      className="group relative grid overflow-hidden border border-black bg-white text-black"
+      whileHover={{ y: -4 }}
+      className="group relative grid cursor-pointer overflow-hidden border border-black/10 bg-white text-black shadow-sm transition-shadow hover:shadow-xl"
+      onClick={() => onOpen(product)}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onOpen(product);
+        }
+      }}
     >
-      <div className="relative aspect-[4/3] overflow-hidden border-b border-black bg-white">
+      <div className="relative aspect-square overflow-hidden bg-white">
         <img
           src={product.image}
-          alt={`${product.name} sourced inventory`}
+          alt={product.name}
           width={1024}
           height={1024}
           loading="lazy"
-          className="h-full w-full object-contain p-0 opacity-100 scale-[1.75] transition duration-300 group-hover:scale-[1.9]"
+          className="h-full w-full object-contain p-4 transition-transform duration-500 ease-out group-hover:scale-105"
         />
         {soldOut && (
-          <div className="absolute inset-0 grid place-items-center bg-black/70 font-display text-4xl uppercase text-white">
+          <div className="absolute inset-0 grid place-items-center bg-white/85 font-display text-3xl uppercase tracking-widest text-black">
             Sold Out
           </div>
         )}
-      </div>
-      <div className="grid gap-3 p-3 sm:p-4">
-        <div>
-          <div className="mb-2 flex items-center justify-between gap-2 font-mono text-[10px] uppercase text-black/60">
-            <span>{product.brand}</span>
-            <span>{product.id}</span>
-          </div>
-          <h2 className="min-h-[3.4rem] font-display text-2xl uppercase leading-none text-black sm:text-3xl">
-            {product.name}
-          </h2>
-          <p className="mt-2 font-mono text-[11px] uppercase text-black/60">
-            Sizes: {product.sizes.join(" / ")}
-          </p>
+        <div className="absolute left-3 top-3 bg-black px-2 py-1 font-mono text-[9px] uppercase tracking-widest text-white">
+          {product.brand}
         </div>
-        <div className="flex items-center justify-between">
-          <p className="font-mono text-sm uppercase text-black">${product.price}</p>
-          <Button
-            variant="vault"
-            size="icon"
-            onClick={() => onAdd(product)}
-            disabled={soldOut}
-            aria-label={`Add ${product.name} to drop`}
-          >
-            <Plus />
-          </Button>
+      </div>
+      <div className="grid gap-2 border-t border-black/10 p-4">
+        <h3 className="font-display text-2xl uppercase leading-tight tracking-wide text-black">
+          {product.name}
+        </h3>
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-black/50">
+              {product.sizes.length} sizes · {product.colors.length} color{product.colors.length > 1 ? "s" : ""}
+            </p>
+            <p className="mt-1 font-display text-xl text-black">${product.price}</p>
+          </div>
+          <span className="font-mono text-[10px] uppercase tracking-widest text-black/50 underline-offset-4 group-hover:underline">
+            View →
+          </span>
         </div>
       </div>
     </motion.article>
+  );
+}
+
+const productCopy: Record<string, { tagline: string; description: string; details: string[] }> = {
+  BAPE: {
+    tagline: "A Bathing Ape — Tokyo streetwear royalty.",
+    description:
+      "Heavyweight cotton construction with signature BAPE branding. Sourced direct, deadstock guaranteed authentic.",
+    details: ["100% premium cotton", "Boxed and tagged", "Authenticated source", "Ships within 48h"],
+  },
+  Sp5der: {
+    tagline: "Sp5der Worldwide — Young Thug's signature line.",
+    description:
+      "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
+    details: ["French terry interior", "Rhinestone graphics", "Oversized streetwear fit", "Authentic Sp5der tags"],
+  },
+  Essentials: {
+    tagline: "Fear of God Essentials — elevated minimalism.",
+    description:
+      "Refined silhouette in muted tones. The everyday staple from Jerry Lorenzo's diffusion line.",
+    details: ["Heavyweight cotton blend", "Relaxed athletic cut", "Tonal rubberized branding", "Original packaging"],
+  },
+  Hellstar: {
+    tagline: "Hellstar Studios — LA cult graphic apparel.",
+    description:
+      "Garment-dyed heavyweight tee with bold front and back graphics. Limited drops, no restocks.",
+    details: ["Heavyweight 240gsm cotton", "Vintage wash treatment", "Front + back prints", "Hellstar holographic tag"],
+  },
+  Fragrance: {
+    tagline: "Designer fragrance — sealed, batch-coded, authentic.",
+    description:
+      "100ml EDP unless noted. All bottles sealed in original cellophane with verified batch codes.",
+    details: ["100ml Eau de Parfum", "Sealed in cellophane", "Batch code verified", "Original retail box"],
+  },
+};
+
+function ProductDetailDialog({
+  product,
+  onClose,
+  onConfigure,
+}: {
+  product: Product | null;
+  onClose: () => void;
+  onConfigure: (product: Product) => void;
+}) {
+  useEffect(() => {
+    if (!product) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = "";
+    };
+  }, [product, onClose]);
+
+  return (
+    <AnimatePresence>
+      {product && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-50 grid place-items-center bg-black/70 p-3 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ y: 24, opacity: 0, scale: 0.98 }}
+            animate={{ y: 0, opacity: 1, scale: 1 }}
+            exit={{ y: 24, opacity: 0, scale: 0.98 }}
+            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            className="relative grid max-h-[92dvh] w-full max-w-4xl grid-cols-1 overflow-hidden bg-white text-black shadow-2xl md:grid-cols-2"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center bg-white/90 text-black shadow transition hover:bg-black hover:text-white"
+            >
+              <X size={18} />
+            </button>
+
+            <div className="relative aspect-square overflow-hidden bg-white md:aspect-auto">
+              <img
+                src={product.image}
+                alt={product.name}
+                className="h-full w-full object-contain p-6"
+              />
+              <div className="absolute left-4 top-4 bg-black px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-white">
+                {product.brand}
+              </div>
+            </div>
+
+            <div className="flex max-h-[92dvh] flex-col overflow-y-auto p-6 md:p-8">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-black/50">
+                {product.category} · {product.id}
+              </p>
+              <h2 className="mt-2 font-display text-4xl uppercase leading-tight tracking-wide text-black sm:text-5xl">
+                {product.name}
+              </h2>
+              <p className="mt-3 font-display text-3xl text-black">${product.price}</p>
+
+              <p className="mt-5 font-body text-sm leading-relaxed text-black/80">
+                {productCopy[product.brand]?.tagline}
+              </p>
+              <p className="mt-2 font-body text-sm leading-relaxed text-black/70">
+                {productCopy[product.brand]?.description}
+              </p>
+
+              <div className="mt-5 grid gap-2">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-black/50">
+                  Available
+                </p>
+                <div className="flex flex-wrap gap-2 font-mono text-xs">
+                  {product.sizes.map((s) => (
+                    <span key={s} className="border border-black/20 px-2 py-1">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <div className="mt-1 flex flex-wrap gap-2 font-mono text-xs text-black/70">
+                  {product.colors.map((c) => (
+                    <span key={c}>· {c}</span>
+                  ))}
+                </div>
+              </div>
+
+              <ul className="mt-5 grid gap-2 border-t border-black/10 pt-4 font-body text-sm text-black/80">
+                {(productCopy[product.brand]?.details ?? []).map((d) => (
+                  <li key={d} className="flex items-start gap-2">
+                    <span className="mt-2 inline-block h-1 w-1 bg-black" />
+                    {d}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-5 grid grid-cols-3 gap-3 border-y border-black/10 py-4 text-center font-mono text-[9px] uppercase tracking-widest text-black/60">
+                <div className="grid place-items-center gap-1"><Truck size={16} /> 48h ship</div>
+                <div className="grid place-items-center gap-1"><Shield size={16} /> Authentic</div>
+                <div className="grid place-items-center gap-1"><Package size={16} /> Tagged</div>
+              </div>
+
+              <button
+                onClick={() => onConfigure(product)}
+                disabled={product.stock === 0}
+                className="mt-5 w-full bg-black py-4 font-display text-xl uppercase tracking-widest text-white transition hover:bg-black/85 disabled:opacity-40"
+              >
+                {product.stock === 0 ? "Sold Out" : "Add to Cart"}
+              </button>
+              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-black/40">
+                Select size & color on next step
+              </p>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 }
 
