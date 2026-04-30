@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
-import { Copy, Plus, Send, ShoppingBag, X } from "lucide-react";
+import { Copy, Pause, Play, Plus, Send, ShoppingBag, Truck, Shield, Package, X } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
