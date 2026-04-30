@@ -314,116 +314,164 @@ function LiveStockTicker() {
 }
 
 function BackgroundMusic() {
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const nodesRef = useRef<{ stop: () => void }[]>([]);
+  const ctxRef = useRef<AudioContext | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
 
-  const stopMusic = () => {
-    nodesRef.current.forEach((node) => node.stop());
-    nodesRef.current = [];
+  const stop = () => {
+    cleanupRef.current?.();
+    cleanupRef.current = null;
     setPlaying(false);
   };
 
-  const toggleMusic = async () => {
-    if (playing) {
-      stopMusic();
-      return;
-    }
+  const start = async () => {
+    const ctx = ctxRef.current ?? new AudioContext();
+    ctxRef.current = ctx;
+    await ctx.resume();
 
-    const context = audioContextRef.current ?? new AudioContext();
-    audioContextRef.current = context;
-    await context.resume();
+    // Master with gentle filter + reverb-ish delay for warmth
+    const master = ctx.createGain();
+    master.gain.value = 0.18;
+    const lpf = ctx.createBiquadFilter();
+    lpf.type = "lowpass";
+    lpf.frequency.value = 2400;
+    lpf.Q.value = 0.7;
 
-    const master = context.createGain();
-    const compressor = context.createDynamicsCompressor();
-    master.gain.value = 0.012;
-    master.connect(compressor);
-    compressor.connect(context.destination);
+    const delay = ctx.createDelay();
+    delay.delayTime.value = 0.38;
+    const feedback = ctx.createGain();
+    feedback.gain.value = 0.28;
+    const wet = ctx.createGain();
+    wet.gain.value = 0.25;
 
-    const makeTone = (frequency: number, type: OscillatorType, gainValue: number) => {
-      const oscillator = context.createOscillator();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      oscillator.type = type;
-      oscillator.frequency.value = frequency;
-      filter.type = "lowpass";
-      filter.frequency.value = 420;
-      gain.gain.value = gainValue;
-      oscillator.connect(filter);
-      filter.connect(gain);
-      gain.connect(master);
-      oscillator.start();
-      nodesRef.current.push({
-        stop: () => {
-          gain.gain.setTargetAtTime(0, context.currentTime, 0.04);
-          window.setTimeout(() => oscillator.stop(), 140);
-        },
+    master.connect(lpf);
+    lpf.connect(ctx.destination);
+    lpf.connect(delay);
+    delay.connect(feedback);
+    feedback.connect(delay);
+    delay.connect(wet);
+    wet.connect(ctx.destination);
+
+    // Slow lo-fi chord progression in A minor: Am – Fmaj7 – Cmaj7 – G
+    // (root, third, fifth, optional 7th) — frequencies in Hz
+    const chords: number[][] = [
+      [220.0, 261.63, 329.63], // Am
+      [174.61, 220.0, 261.63, 329.63], // Fmaj7
+      [261.63, 329.63, 392.0, 493.88], // Cmaj7
+      [196.0, 246.94, 293.66], // G
+    ];
+
+    const playChord = (freqs: number[], when: number, dur: number) => {
+      freqs.forEach((f, i) => {
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.type = i === 0 ? "triangle" : "sine";
+        osc.frequency.value = f;
+        // gentle detune for warmth
+        osc.detune.value = (Math.random() - 0.5) * 6;
+        g.gain.setValueAtTime(0, when);
+        g.gain.linearRampToValueAtTime(0.12 / freqs.length, when + 0.6);
+        g.gain.linearRampToValueAtTime(0.08 / freqs.length, when + dur - 0.4);
+        g.gain.linearRampToValueAtTime(0, when + dur);
+        osc.connect(g);
+        g.connect(master);
+        osc.start(when);
+        osc.stop(when + dur + 0.1);
       });
     };
 
-    const kick = () => {
-      const oscillator = context.createOscillator();
-      const gain = context.createGain();
-      oscillator.type = "sine";
-      oscillator.frequency.setValueAtTime(92, context.currentTime);
-      oscillator.frequency.exponentialRampToValueAtTime(42, context.currentTime + 0.16);
-      gain.gain.setValueAtTime(0.08, context.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.22);
-      oscillator.connect(gain);
-      gain.connect(master);
-      oscillator.start();
-      oscillator.stop(context.currentTime + 0.24);
+    // Soft kick on beat 1 of each bar — warm, not harsh
+    const playKick = (when: number) => {
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(80, when);
+      osc.frequency.exponentialRampToValueAtTime(38, when + 0.15);
+      g.gain.setValueAtTime(0, when);
+      g.gain.linearRampToValueAtTime(0.18, when + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.001, when + 0.32);
+      osc.connect(g);
+      g.connect(master);
+      osc.start(when);
+      osc.stop(when + 0.35);
     };
 
-    const hat = () => {
-      const bufferSize = context.sampleRate * 0.035;
-      const buffer = context.createBuffer(1, bufferSize, context.sampleRate);
-      const data = buffer.getChannelData(0);
-      for (let index = 0; index < bufferSize; index += 1) data[index] = Math.random() * 2 - 1;
-      const source = context.createBufferSource();
-      const filter = context.createBiquadFilter();
-      const gain = context.createGain();
-      filter.type = "highpass";
-      filter.frequency.value = 7200;
-      gain.gain.value = 0.012;
-      source.buffer = buffer;
-      source.connect(filter);
-      filter.connect(gain);
-      gain.connect(master);
-      source.start();
+    // Soft side-stick / snare on beat 3
+    const playSnare = (when: number) => {
+      const buf = ctx.createBuffer(1, ctx.sampleRate * 0.2, ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.05));
+      const src = ctx.createBufferSource();
+      const bp = ctx.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 1800;
+      const g = ctx.createGain();
+      g.gain.value = 0.06;
+      src.buffer = buf;
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(master);
+      src.start(when);
     };
 
-    makeTone(49, "sine", 0.28);
-    makeTone(73.42, "triangle", 0.09);
+    const barDur = 4.0; // 4 seconds per chord (slow, calm)
+    let bar = 0;
+    const schedule = () => {
+      const now = ctx.currentTime;
+      // schedule the next 2 bars ahead
+      for (let i = 0; i < 2; i++) {
+        const when = now + i * barDur + 0.05;
+        const chord = chords[(bar + i) % chords.length];
+        playChord(chord, when, barDur);
+        playKick(when);
+        playKick(when + barDur / 2);
+        playSnare(when + barDur / 4);
+        playSnare(when + (3 * barDur) / 4);
+      }
+      bar += 2;
+    };
+    schedule();
+    const iv = window.setInterval(schedule, barDur * 2 * 1000 - 100);
 
-    const beat = window.setInterval(() => {
-      kick();
-      window.setTimeout(hat, 145);
-      window.setTimeout(hat, 290);
-      window.setTimeout(kick, 435);
-      window.setTimeout(hat, 580);
-    }, 720);
-
-    nodesRef.current.push({ stop: () => window.clearInterval(beat) });
+    cleanupRef.current = () => {
+      window.clearInterval(iv);
+      master.gain.cancelScheduledValues(ctx.currentTime);
+      master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.3);
+      window.setTimeout(() => {
+        try {
+          master.disconnect();
+          lpf.disconnect();
+          delay.disconnect();
+          feedback.disconnect();
+          wet.disconnect();
+        } catch {}
+      }, 400);
+    };
 
     setPlaying(true);
   };
 
-  useEffect(() => stopMusic, []);
+  const toggle = () => (playing ? stop() : start());
+
+  useEffect(() => () => cleanupRef.current?.(), []);
 
   return (
     <button
       type="button"
-      onClick={toggleMusic}
-      className="album-disc fixed bottom-4 left-4 z-30 grid h-20 w-20 place-items-center overflow-hidden border border-vault-crimson bg-background text-primary-foreground shadow-vault-glow"
-      aria-label={playing ? "Stop background music" : "Play background music"}
+      onClick={toggle}
+      className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-black/20 bg-white/95 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-black shadow-lg backdrop-blur transition hover:shadow-xl"
+      aria-label={playing ? "Pause music" : "Play music"}
     >
-      <span className={playing ? "album-disc-art is-spinning" : "album-disc-art"}>
-        <span className="text-[10px] font-display uppercase leading-none">JOAT</span>
+      <span className={`relative grid h-9 w-9 place-items-center overflow-hidden rounded-full bg-black text-white ${playing ? "album-spin" : ""}`}>
+        <span className="absolute inset-1 rounded-full border border-white/20" />
+        <span className="absolute inset-3 rounded-full bg-white/80" />
+        <span className="absolute h-1 w-1 rounded-full bg-black" />
       </span>
-      <span className="absolute bottom-1 font-mono text-[8px] uppercase tracking-[0.18em]">
-        {playing ? "Playing" : "Tap"}
+      <span className="flex flex-col items-start leading-tight">
+        <span className="text-black">JOAT FM</span>
+        <span className="text-black/50">{playing ? "Now Playing" : "Tap to Play"}</span>
       </span>
+      {playing ? <Pause size={14} /> : <Play size={14} />}
     </button>
   );
 }
