@@ -74,6 +74,7 @@ function Index() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [selectingProduct, setSelectingProduct] = useState<Product | null>(null);
+  const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
   const [details, setDetails] = useState<OrderDetails>({ name: "", address: "", telegram: "" });
@@ -100,7 +101,7 @@ function Index() {
   };
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-background text-foreground vault-noise">
+    <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <AnimatePresence mode="wait">
         {!unlocked ? (
           <RestrictedGateway key="gate" onUnlock={() => setUnlocked(true)} />
@@ -109,11 +110,20 @@ function Index() {
             key="vault"
             cart={cart}
             total={total}
-            openProductSelector={setSelectingProduct}
+            openProductDetail={setViewingProduct}
             openCart={() => setCartOpen(true)}
           />
         )}
       </AnimatePresence>
+
+      <ProductDetailDialog
+        product={viewingProduct}
+        onClose={() => setViewingProduct(null)}
+        onConfigure={(product) => {
+          setViewingProduct(null);
+          setSelectingProduct(product);
+        }}
+      />
 
       <ProductSelectionDrawer
         product={selectingProduct}
