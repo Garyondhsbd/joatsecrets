@@ -220,12 +220,12 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
 function VaultHub({
   cart,
   total,
-  openProductSelector,
+  openProductDetail,
   openCart,
 }: {
   cart: CartItem[];
   total: number;
-  openProductSelector: (product: Product) => void;
+  openProductDetail: (product: Product) => void;
   openCart: () => void;
 }) {
   const { scrollY } = useScroll();
