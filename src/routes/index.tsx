@@ -786,12 +786,26 @@ const productCopy: Record<string, { tagline: string; description: string; detail
 function ProductDetailDialog({
   product,
   onClose,
-  onConfigure,
+  onAdd,
 }: {
   product: Product | null;
   onClose: () => void;
-  onConfigure: (product: Product) => void;
+  onAdd: (product: Product, selectedColor: string, selectedSize: string) => void;
 }) {
+  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("");
+
+  useEffect(() => {
+    if (!product) return;
+    const saved = readProductOptionMemory(product.id);
+    setSelectedColor(
+      saved.color && product.colors.includes(saved.color) ? saved.color : (product.colors[0] ?? ""),
+    );
+    setSelectedSize(
+      saved.size && product.sizes.includes(saved.size) ? saved.size : (product.sizes[0] ?? ""),
+    );
+  }, [product]);
+
   useEffect(() => {
     if (!product) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
@@ -807,17 +821,21 @@ function ProductDetailDialog({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
+          className="fixed inset-0 z-50 grid items-end bg-black/80 p-3 sm:place-items-center sm:p-4"
           onClick={onClose}
+          role="presentation"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.92 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="relative w-full max-w-md overflow-hidden border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
+            className="relative grid max-h-[92dvh] w-full max-w-4xl overflow-y-auto border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)] sm:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]"
             onClick={(e) => e.stopPropagation()}
             style={{ willChange: "transform, opacity" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-dialog-title"
           >
             <button
               onClick={onClose}
@@ -827,24 +845,24 @@ function ProductDetailDialog({
               <X size={16} />
             </button>
 
-            <div className="relative aspect-[4/5] overflow-hidden bg-black">
+            <div className="relative min-h-[320px] overflow-hidden bg-black sm:sticky sm:top-0 sm:h-[92dvh]">
               <img
                 src={product.image}
                 alt={product.name}
                 loading="eager"
                 decoding="async"
-                className="absolute inset-0 h-full w-full object-cover"
+                className="absolute inset-0 h-full w-full object-contain sm:object-cover"
               />
               <div className="absolute left-3 top-3 bg-white/95 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black">
                 {product.brand}
               </div>
             </div>
 
-            <div className="p-5">
+            <div className="p-5 sm:p-6">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
                 {product.category}
               </p>
-              <h2 className="mt-1 font-display text-3xl uppercase leading-tight tracking-wide">
+              <h2 id="product-dialog-title" className="mt-1 font-display text-4xl uppercase leading-tight tracking-wide">
                 {product.name}
               </h2>
               <div className="mt-2 flex items-baseline justify-between">
@@ -854,9 +872,14 @@ function ProductDetailDialog({
                 </p>
               </div>
 
-              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75 line-clamp-3">
+              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75">
                 {productCopy[product.brand]?.description}
               </p>
+
+              <div className="mt-5 grid gap-4">
+                <OptionGroup label="Color" options={product.colors} value={selectedColor} onChange={setSelectedColor} />
+                <OptionGroup label="Size" options={product.sizes} value={selectedSize} onChange={setSelectedSize} />
+              </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2 border-y border-white/10 py-3 text-center font-mono text-[9px] uppercase tracking-widest text-foreground/55">
                 <div className="grid place-items-center gap-1"><Truck size={14} /> 48h</div>
@@ -865,10 +888,11 @@ function ProductDetailDialog({
               </div>
 
               <button
-                onClick={() => onConfigure(product)}
-                className="mt-4 w-full bg-gradient-to-r from-[oklch(0.48_0.24_25)] to-[oklch(0.55_0.27_25)] py-3.5 font-display text-lg uppercase tracking-widest text-white transition hover:brightness-110"
+                onClick={() => onAdd(product, selectedColor, selectedSize)}
+                disabled={!selectedColor || !selectedSize}
+                className="mt-4 w-full bg-primary py-3.5 font-display text-lg uppercase tracking-widest text-primary-foreground transition hover:bg-accent disabled:opacity-40"
               >
-                Add to Cart
+                Add ${product.price} to Cart
               </button>
             </div>
           </motion.div>
