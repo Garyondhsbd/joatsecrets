@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import products from "@/data/products.json";
@@ -56,6 +56,8 @@ const writeProductOptionMemory = (productId: string, color: string, size: string
 const productSections = [
   "Bape Tees",
   "Sp5der Hoodies",
+  "Denim Tears",
+  "Chrome Hearts",
   "Essentials Shorts",
   "Hellstar Tees",
   "Fragrance",
@@ -65,7 +67,6 @@ function Index() {
   const [unlocked, setUnlocked] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [selectingProduct, setSelectingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
@@ -117,18 +118,10 @@ function Index() {
       <ProductDetailDialog
         product={viewingProduct}
         onClose={() => setViewingProduct(null)}
-        onConfigure={(product) => {
-          setViewingProduct(null);
-          setSelectingProduct(product);
-        }}
-      />
-
-      <ProductSelectionDrawer
-        product={selectingProduct}
-        onClose={() => setSelectingProduct(null)}
         onAdd={(product, selectedColor, selectedSize) => {
+          writeProductOptionMemory(product.id, selectedColor, selectedSize);
           addToDrop(product, selectedColor, selectedSize);
-          setSelectingProduct(null);
+          setViewingProduct(null);
         }}
       />
 
