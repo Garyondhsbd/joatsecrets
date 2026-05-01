@@ -74,26 +74,26 @@
 
 :root {
   --radius: 0rem;
-  /* Deep space outer-space palette */
-  --background: oklch(0.06 0.025 270);
-  --foreground: oklch(0.96 0.01 250);
-  --card: oklch(0.11 0.035 268);
-  --card-foreground: oklch(0.96 0.01 250);
-  --popover: oklch(0.10 0.035 268);
-  --popover-foreground: oklch(0.96 0.01 250);
-  --primary: oklch(0.407 0.164 29.23);
-  --primary-foreground: oklch(0.955 0 0);
-  --secondary: oklch(0.17 0 0);
-  --secondary-foreground: oklch(0.955 0 0);
-  --muted: oklch(0.17 0 0);
-  --muted-foreground: oklch(0.511 0 0);
-  --accent: oklch(0.632 0.257 31.35);
-  --accent-foreground: oklch(0.955 0 0);
-  --destructive: oklch(0.407 0.164 29.23);
-  --destructive-foreground: oklch(0.955 0 0);
-  --border: oklch(0.26 0 0);
-  --input: oklch(0.17 0 0);
-  --ring: oklch(0.632 0.257 31.35);
+  /* Dark Royal / Nebula palette — void black + blood crimson */
+  --background: oklch(0 0 0);
+  --foreground: oklch(0.97 0.005 20);
+  --card: oklch(0.08 0.03 20);
+  --card-foreground: oklch(0.97 0.005 20);
+  --popover: oklch(0.06 0.025 20);
+  --popover-foreground: oklch(0.97 0.005 20);
+  --primary: oklch(0.48 0.24 25);
+  --primary-foreground: oklch(0.98 0 0);
+  --secondary: oklch(0.12 0.02 20);
+  --secondary-foreground: oklch(0.97 0 0);
+  --muted: oklch(0.12 0.015 20);
+  --muted-foreground: oklch(0.62 0.04 20);
+  --accent: oklch(0.55 0.27 25);
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.48 0.24 25);
+  --destructive-foreground: oklch(0.98 0 0);
+  --border: oklch(0.22 0.04 20);
+  --input: oklch(0.14 0.02 20);
+  --ring: oklch(0.55 0.27 25);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
