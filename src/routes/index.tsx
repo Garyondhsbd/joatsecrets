@@ -683,7 +683,7 @@ function ProductCard({
   product: Product;
   onOpen: (product: Product) => void;
 }) {
-  const ref = useRef<HTMLElement | null>(null);
+  const ref = useRef<HTMLButtonElement | null>(null);
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -707,20 +707,14 @@ function ProductCard({
   const handleOpen = () => onOpen(product);
 
   return (
-    <article
+    <button
+      type="button"
       ref={ref}
-      className={`crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-foreground shadow-lg ${
+      className={`crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-left text-foreground shadow-lg ${
         shown ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       } transition-[opacity,transform] duration-500 ease-out`}
       onClick={handleOpen}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleOpen();
-        }
-      }}
+      aria-label={`View ${product.name}, ${product.brand}, $${product.price}`}
     >
       <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
         <img
@@ -746,7 +740,7 @@ function ProductCard({
           <p className="font-display text-xl text-foreground">${product.price}</p>
         </div>
       </div>
-    </article>
+    </button>
   );
 }
 
