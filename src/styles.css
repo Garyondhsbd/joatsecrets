@@ -184,10 +184,10 @@
 @layer utilities {
   .deep-space-gradient {
     background:
-      radial-gradient(ellipse at 20% 10%, oklch(0.18 0.12 285 / 0.55), transparent 55%),
-      radial-gradient(ellipse at 85% 80%, oklch(0.16 0.14 250 / 0.55), transparent 55%),
-      radial-gradient(ellipse at 50% 50%, oklch(0.10 0.06 270 / 0.4), transparent 70%),
-      linear-gradient(180deg, oklch(0.04 0.02 270), oklch(0.07 0.04 280));
+      radial-gradient(ellipse at 18% 12%, oklch(0.22 0.18 25 / 0.45), transparent 55%),
+      radial-gradient(ellipse at 85% 80%, oklch(0.18 0.16 15 / 0.5), transparent 55%),
+      radial-gradient(ellipse at 50% 55%, oklch(0.10 0.10 25 / 0.35), transparent 72%),
+      linear-gradient(180deg, #000000, oklch(0.04 0.03 20));
   }
 
   .starfield {
@@ -202,18 +202,47 @@
       radial-gradient(1px 1px at 92% 35%, white, transparent 60%),
       radial-gradient(1px 1px at 47% 8%, white, transparent 60%),
       radial-gradient(1.5px 1.5px at 65% 88%, white, transparent 60%);
-    background-size: 800px 800px;
+    background-size: 900px 900px;
     background-repeat: repeat;
-    opacity: 0.55;
-    animation: starfield-drift 120s linear infinite;
+    opacity: 0.5;
+    animation: starfield-drift 180s linear infinite;
+    will-change: background-position;
   }
 
   .nebula-drift {
     background:
-      radial-gradient(circle at 30% 30%, oklch(0.40 0.22 290 / 0.18), transparent 40%),
-      radial-gradient(circle at 70% 70%, oklch(0.35 0.20 230 / 0.18), transparent 42%);
-    filter: blur(20px);
-    animation: nebula-pan 30s ease-in-out infinite alternate;
+      radial-gradient(circle at 28% 32%, oklch(0.45 0.25 25 / 0.18), transparent 45%),
+      radial-gradient(circle at 72% 68%, oklch(0.35 0.22 15 / 0.16), transparent 48%);
+    animation: nebula-pan 40s ease-in-out infinite alternate;
+  }
+
+  /* Disable expensive blur on small screens to keep scrolling smooth */
+  @media (min-width: 768px) {
+    .nebula-drift { filter: blur(24px); }
+  }
+
+  /* Jester crown watermark — minimal SVG */
+  .jester-watermark {
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'><g fill='none' stroke='%23ff2d3a' stroke-width='1.4' opacity='0.18'><path d='M40 130 L60 70 L80 120 L100 60 L120 120 L140 70 L160 130 Z'/><circle cx='60' cy='66' r='4'/><circle cx='100' cy='56' r='4'/><circle cx='140' cy='66' r='4'/><path d='M40 130 L160 130 L155 145 L45 145 Z'/></g></svg>");
+    background-size: 320px 320px;
+    background-repeat: repeat;
+    opacity: 0.5;
+  }
+
+  /* Crimson product hover glow */
+  .crimson-hover {
+    transition:
+      transform 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 280ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 280ms ease;
+  }
+  .crimson-hover:hover,
+  .crimson-hover:focus-visible {
+    transform: translateY(-4px);
+    box-shadow:
+      0 12px 40px -10px rgba(255, 30, 50, 0.45),
+      0 0 0 1px rgba(255, 50, 70, 0.35);
+    border-color: rgba(255, 60, 80, 0.5);
   }
 
   @keyframes starfield-drift {
