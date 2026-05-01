@@ -154,6 +154,7 @@ function SpaceBackdrop() {
       <div className="absolute inset-0 deep-space-gradient" />
       <div className="absolute inset-0 starfield" />
       <div className="absolute inset-0 nebula-drift" />
+      <div className="absolute inset-0 jester-watermark" />
     </div>
   );
 }
