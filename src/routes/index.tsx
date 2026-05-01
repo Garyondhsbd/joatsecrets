@@ -669,37 +669,56 @@ function ProductCard({
   product: Product;
   onOpen: (product: Product) => void;
 }) {
+  const ref = useRef<HTMLElement | null>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) {
+            setShown(true);
+            io.disconnect();
+          }
+        });
+      },
+      { rootMargin: "60px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
+  const handleOpen = () => onOpen(product);
+
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-40px" }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-      whileHover={{ y: -3 }}
-      className="group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-foreground shadow-lg transition-all duration-300 hover:border-white/30 hover:shadow-[0_10px_40px_-10px_rgba(120,140,255,0.4)]"
-      onClick={() => onOpen(product)}
+    <article
+      ref={ref}
+      className={`crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-foreground shadow-lg ${
+        shown ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+      } transition-[opacity,transform] duration-500 ease-out`}
+      onClick={handleOpen}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onOpen(product);
+          handleOpen();
         }
       }}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-white/[0.01]">
+      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
+          decoding="async"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-90" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <div className="absolute left-2 top-2 bg-white/95 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-black">
           {product.brand}
-        </div>
-        <div className="absolute bottom-2 right-2 translate-y-2 bg-white px-2.5 py-1 font-mono text-[10px] uppercase tracking-widest text-black opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-          Quick view →
         </div>
       </div>
       <div className="grid gap-1 border-t border-white/10 p-3">
@@ -713,7 +732,7 @@ function ProductCard({
           <p className="font-display text-xl text-foreground">${product.price}</p>
         </div>
       </div>
-    </motion.article>
+    </article>
   );
 }
 
