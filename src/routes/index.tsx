@@ -450,24 +450,41 @@ function BackgroundMusic() {
   const ctxRef = useRef<AudioContext | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [starting, setStarting] = useState(false);
 
-  const stop = () => {
+  const stop = useCallback(() => {
     cleanupRef.current?.();
     cleanupRef.current = null;
     setPlaying(false);
-  };
+    setStarting(false);
+  }, []);
 
-  const start = async () => {
+  const start = useCallback(async () => {
+    if (playing || starting) return;
+    setStarting(true);
+    cleanupRef.current?.();
     const ctx = ctxRef.current ?? new AudioContext();
     ctxRef.current = ctx;
-    await ctx.resume();
+    try {
+      await ctx.resume();
+    } catch {
+      setStarting(false);
+      return;
+    }
 
     const master = ctx.createGain();
-    master.gain.value = 0.22;
+    master.gain.value = 0.16;
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -20;
+    compressor.knee.value = 24;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.008;
+    compressor.release.value = 0.18;
     const lpf = ctx.createBiquadFilter();
     lpf.type = "lowpass";
-    lpf.frequency.value = 3800;
-    master.connect(lpf);
+    lpf.frequency.value = 5200;
+    master.connect(compressor);
+    compressor.connect(lpf);
     lpf.connect(ctx.destination);
 
     // 808 sub-bass — drill style sliding bass
@@ -561,16 +578,16 @@ function BackgroundMusic() {
       osc.stop(when + dur + 0.1);
     };
 
-    // 140 BPM drill — 16th note hats, kick on 1 & 3, snare on 2 & 4, sliding 808s
-    const bpm = 140;
+    // 146 BPM trap pattern — heavy sub, clean hats, restrained volume
+    const bpm = 146;
     const beat = 60 / bpm; // ~0.428s
     const sixteenth = beat / 4;
     const barDur = beat * 4;
     // 808 pattern in C minor: C2(65.4), Eb2(77.8), G2(98.0), Bb2(116.5)
     const bassPattern = [
-      [0, 65.4, beat * 1.5],
-      [beat * 1.5, 77.8, beat * 1.0],
-      [beat * 2.5, 98.0, beat * 1.5],
+      [0, 55.0, beat * 1.25],
+      [beat * 1.5, 65.4, beat * 0.75],
+      [beat * 2.25, 46.2, beat * 1.5],
     ];
     // Pad notes per bar (cycles)
     const padCycle = [
@@ -624,13 +641,15 @@ function BackgroundMusic() {
       window.setTimeout(() => {
         try {
           master.disconnect();
+          compressor.disconnect();
           lpf.disconnect();
         } catch {}
       }, 350);
     };
 
     setPlaying(true);
-  };
+    setStarting(false);
+  }, [playing, starting]);
 
   const toggle = () => (playing ? stop() : start());
 
@@ -642,13 +661,15 @@ function BackgroundMusic() {
       onClick={toggle}
       className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-white/15 bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white shadow-2xl backdrop-blur-md transition hover:border-white/40"
       aria-label={playing ? "Pause music" : "Play music"}
+      aria-pressed={playing}
+      disabled={starting}
     >
       <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full">
         <span className={`album-disc-art ${playing ? "is-spinning" : ""}`} />
       </span>
       <span className="flex flex-col items-start leading-tight">
         <span className="text-white">J.O.A.T FM</span>
-        <span className="text-white/50">{playing ? "On Air" : "Tap to Play"}</span>
+        <span className="text-white/50">{starting ? "Loading" : playing ? "On Air" : "Tap to Play"}</span>
       </span>
       {playing ? <Pause size={14} /> : <Play size={14} />}
     </button>
