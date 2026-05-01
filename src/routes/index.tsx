@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import products from "@/data/products.json";
@@ -56,6 +56,8 @@ const writeProductOptionMemory = (productId: string, color: string, size: string
 const productSections = [
   "Bape Tees",
   "Sp5der Hoodies",
+  "Denim Tears",
+  "Chrome Hearts",
   "Essentials Shorts",
   "Hellstar Tees",
   "Fragrance",
@@ -65,7 +67,6 @@ function Index() {
   const [unlocked, setUnlocked] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
-  const [selectingProduct, setSelectingProduct] = useState<Product | null>(null);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
   const [stage, setStage] = useState<OrderStage>("cart");
   const [orderId, setOrderId] = useState("");
@@ -117,18 +118,10 @@ function Index() {
       <ProductDetailDialog
         product={viewingProduct}
         onClose={() => setViewingProduct(null)}
-        onConfigure={(product) => {
-          setViewingProduct(null);
-          setSelectingProduct(product);
-        }}
-      />
-
-      <ProductSelectionDrawer
-        product={selectingProduct}
-        onClose={() => setSelectingProduct(null)}
         onAdd={(product, selectedColor, selectedSize) => {
+          writeProductOptionMemory(product.id, selectedColor, selectedSize);
           addToDrop(product, selectedColor, selectedSize);
-          setSelectingProduct(null);
+          setViewingProduct(null);
         }}
       />
 
@@ -457,24 +450,41 @@ function BackgroundMusic() {
   const ctxRef = useRef<AudioContext | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
   const [playing, setPlaying] = useState(false);
+  const [starting, setStarting] = useState(false);
 
-  const stop = () => {
+  const stop = useCallback(() => {
     cleanupRef.current?.();
     cleanupRef.current = null;
     setPlaying(false);
-  };
+    setStarting(false);
+  }, []);
 
-  const start = async () => {
+  const start = useCallback(async () => {
+    if (playing || starting) return;
+    setStarting(true);
+    cleanupRef.current?.();
     const ctx = ctxRef.current ?? new AudioContext();
     ctxRef.current = ctx;
-    await ctx.resume();
+    try {
+      await ctx.resume();
+    } catch {
+      setStarting(false);
+      return;
+    }
 
     const master = ctx.createGain();
-    master.gain.value = 0.22;
+    master.gain.value = 0.16;
+    const compressor = ctx.createDynamicsCompressor();
+    compressor.threshold.value = -20;
+    compressor.knee.value = 24;
+    compressor.ratio.value = 6;
+    compressor.attack.value = 0.008;
+    compressor.release.value = 0.18;
     const lpf = ctx.createBiquadFilter();
     lpf.type = "lowpass";
-    lpf.frequency.value = 3800;
-    master.connect(lpf);
+    lpf.frequency.value = 5200;
+    master.connect(compressor);
+    compressor.connect(lpf);
     lpf.connect(ctx.destination);
 
     // 808 sub-bass — drill style sliding bass
@@ -568,16 +578,16 @@ function BackgroundMusic() {
       osc.stop(when + dur + 0.1);
     };
 
-    // 140 BPM drill — 16th note hats, kick on 1 & 3, snare on 2 & 4, sliding 808s
-    const bpm = 140;
+    // 146 BPM trap pattern — heavy sub, clean hats, restrained volume
+    const bpm = 146;
     const beat = 60 / bpm; // ~0.428s
     const sixteenth = beat / 4;
     const barDur = beat * 4;
     // 808 pattern in C minor: C2(65.4), Eb2(77.8), G2(98.0), Bb2(116.5)
     const bassPattern = [
-      [0, 65.4, beat * 1.5],
-      [beat * 1.5, 77.8, beat * 1.0],
-      [beat * 2.5, 98.0, beat * 1.5],
+      [0, 55.0, beat * 1.25],
+      [beat * 1.5, 65.4, beat * 0.75],
+      [beat * 2.25, 46.2, beat * 1.5],
     ];
     // Pad notes per bar (cycles)
     const padCycle = [
@@ -631,13 +641,15 @@ function BackgroundMusic() {
       window.setTimeout(() => {
         try {
           master.disconnect();
+          compressor.disconnect();
           lpf.disconnect();
         } catch {}
       }, 350);
     };
 
     setPlaying(true);
-  };
+    setStarting(false);
+  }, [playing, starting]);
 
   const toggle = () => (playing ? stop() : start());
 
@@ -649,13 +661,15 @@ function BackgroundMusic() {
       onClick={toggle}
       className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-white/15 bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white shadow-2xl backdrop-blur-md transition hover:border-white/40"
       aria-label={playing ? "Pause music" : "Play music"}
+      aria-pressed={playing}
+      disabled={starting}
     >
       <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full">
         <span className={`album-disc-art ${playing ? "is-spinning" : ""}`} />
       </span>
       <span className="flex flex-col items-start leading-tight">
         <span className="text-white">J.O.A.T FM</span>
-        <span className="text-white/50">{playing ? "On Air" : "Tap to Play"}</span>
+        <span className="text-white/50">{starting ? "Loading" : playing ? "On Air" : "Tap to Play"}</span>
       </span>
       {playing ? <Pause size={14} /> : <Play size={14} />}
     </button>
@@ -669,7 +683,7 @@ function ProductCard({
   product: Product;
   onOpen: (product: Product) => void;
 }) {
-  const ref = useRef<HTMLElement | null>(null);
+  const ref = useRef<HTMLButtonElement | null>(null);
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
@@ -693,28 +707,22 @@ function ProductCard({
   const handleOpen = () => onOpen(product);
 
   return (
-    <article
+    <button
+      type="button"
       ref={ref}
-      className={`crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-foreground shadow-lg ${
+      className={`crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-left text-foreground shadow-lg ${
         shown ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
       } transition-[opacity,transform] duration-500 ease-out`}
       onClick={handleOpen}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          handleOpen();
-        }
-      }}
+      aria-label={`View ${product.name}, ${product.brand}, $${product.price}`}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
+      <div className="product-card-media relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <div className="absolute left-2 top-2 bg-white/95 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-black">
@@ -732,7 +740,7 @@ function ProductCard({
           <p className="font-display text-xl text-foreground">${product.price}</p>
         </div>
       </div>
-    </article>
+    </button>
   );
 }
 
@@ -748,6 +756,18 @@ const productCopy: Record<string, { tagline: string; description: string; detail
     description:
       "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
     details: ["French terry interior", "Rhinestone graphics", "Oversized streetwear fit", "Authentic Sp5der tags"],
+  },
+  "DENIM TEARS": {
+    tagline: "Denim Tears — cotton wreath staples.",
+    description:
+      "Premium fleece shorts with the signature wreath layout. Clean everyday streetwear piece, framed for easy size selection.",
+    details: ["Fleece short", "Elastic drawstring waist", "Cotton wreath graphic", "Ships within 48h"],
+  },
+  "CHROME HEARTS": {
+    tagline: "Chrome Hearts — statement graphic tees.",
+    description:
+      "Streetwear graphic tee with strong back-print presence and an easy everyday cut. Select your size before adding to cart.",
+    details: ["Cotton tee", "Graphic print", "Streetwear fit", "Ships within 48h"],
   },
   ESSENTIALS: {
     tagline: "Fear of God Essentials — elevated minimalism.",
@@ -772,101 +792,6 @@ const productCopy: Record<string, { tagline: string; description: string; detail
 function ProductDetailDialog({
   product,
   onClose,
-  onConfigure,
-}: {
-  product: Product | null;
-  onClose: () => void;
-  onConfigure: (product: Product) => void;
-}) {
-  useEffect(() => {
-    if (!product) return;
-    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [product, onClose]);
-
-  return (
-    <AnimatePresence>
-      {product && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
-          onClick={onClose}
-        >
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.94 }}
-            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="relative w-full max-w-md overflow-hidden border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
-            onClick={(e) => e.stopPropagation()}
-            style={{ willChange: "transform, opacity" }}
-          >
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center bg-white/95 text-black transition hover:bg-white"
-            >
-              <X size={16} />
-            </button>
-
-            <div className="relative aspect-[4/5] overflow-hidden bg-black">
-              <img
-                src={product.image}
-                alt={product.name}
-                loading="eager"
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-cover"
-              />
-              <div className="absolute left-3 top-3 bg-white/95 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black">
-                {product.brand}
-              </div>
-            </div>
-
-            <div className="p-5">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
-                {product.category}
-              </p>
-              <h2 className="mt-1 font-display text-3xl uppercase leading-tight tracking-wide">
-                {product.name}
-              </h2>
-              <div className="mt-2 flex items-baseline justify-between">
-                <p className="font-display text-2xl">${product.price}</p>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/45">
-                  {product.sizes.length} sz · {product.colors.length} clr
-                </p>
-              </div>
-
-              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75 line-clamp-3">
-                {productCopy[product.brand]?.description}
-              </p>
-
-              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-white/10 py-3 text-center font-mono text-[9px] uppercase tracking-widest text-foreground/55">
-                <div className="grid place-items-center gap-1"><Truck size={14} /> 48h</div>
-                <div className="grid place-items-center gap-1"><Shield size={14} /> Real</div>
-                <div className="grid place-items-center gap-1"><Package size={14} /> Tagged</div>
-              </div>
-
-              <button
-                onClick={() => onConfigure(product)}
-                className="mt-4 w-full bg-gradient-to-r from-[oklch(0.48_0.24_25)] to-[oklch(0.55_0.27_25)] py-3.5 font-display text-lg uppercase tracking-widest text-white transition hover:brightness-110"
-              >
-                Add to Cart
-              </button>
-            </div>
-          </motion.div>
-        </motion.div>
-      )}
-    </AnimatePresence>
-  );
-}
-
-function ProductSelectionDrawer({
-  product,
-  onClose,
   onAdd,
 }: {
   product: Product | null;
@@ -887,55 +812,97 @@ function ProductSelectionDrawer({
     );
   }, [product]);
 
+  useEffect(() => {
+    if (!product) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [product, onClose]);
+
   return (
     <AnimatePresence>
       {product && (
-        <motion.aside
-          initial={{ y: "105%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "105%" }}
-          transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-x-0 bottom-0 z-40 border-t border-white/15 bg-card shadow-2xl"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+          className="fixed inset-0 z-50 grid items-end bg-black/80 p-3 sm:place-items-center sm:p-4"
+          onClick={onClose}
+          role="presentation"
         >
-          <div className="mx-auto max-w-3xl p-4 sm:p-6">
-            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
-              <div>
-                <p className="font-mono text-[10px] uppercase text-foreground/50">{product.brand}</p>
-                <h3 className="font-display text-3xl uppercase leading-none">{product.name}</h3>
-                <p className="mt-1 font-mono text-sm uppercase">${product.price}</p>
-              </div>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close">
-                <X />
-              </Button>
-            </div>
-
-            <div className="grid gap-5 py-5 sm:grid-cols-2">
-              <OptionGroup
-                label="Color"
-                options={product.colors}
-                value={selectedColor}
-                onChange={setSelectedColor}
-              />
-              <OptionGroup
-                label="Size"
-                options={product.sizes}
-                value={selectedSize}
-                onChange={setSelectedSize}
-              />
-            </div>
-
+          <motion.div
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="modal-scrollbar relative grid max-h-[92dvh] w-full max-w-4xl overflow-y-auto border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)] sm:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]"
+            onClick={(e) => e.stopPropagation()}
+            style={{ willChange: "transform, opacity" }}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="product-dialog-title"
+          >
             <button
-              onClick={() => {
-                writeProductOptionMemory(product.id, selectedColor, selectedSize);
-                onAdd(product, selectedColor, selectedSize);
-              }}
-              disabled={!selectedColor || !selectedSize}
-              className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90 disabled:opacity-40"
+              onClick={onClose}
+              aria-label="Close"
+              className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center bg-white/95 text-black transition hover:bg-white"
             >
-              Add to Cart
+              <X size={16} />
             </button>
-          </div>
-        </motion.aside>
+
+            <div className="relative min-h-[320px] overflow-hidden bg-black sm:sticky sm:top-0 sm:h-[92dvh]">
+              <img
+                src={product.image}
+                alt={product.name}
+                loading="eager"
+                decoding="async"
+                className="absolute inset-0 h-full w-full object-contain sm:object-cover"
+              />
+              <div className="absolute left-3 top-3 bg-white/95 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black">
+                {product.brand}
+              </div>
+            </div>
+
+            <div className="p-5 sm:p-6">
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
+                {product.category}
+              </p>
+              <h2 id="product-dialog-title" className="mt-1 font-display text-4xl uppercase leading-tight tracking-wide">
+                {product.name}
+              </h2>
+              <div className="mt-2 flex items-baseline justify-between">
+                <p className="font-display text-2xl">${product.price}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/45">
+                  {product.sizes.length} sz · {product.colors.length} clr
+                </p>
+              </div>
+
+              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75">
+                {productCopy[product.brand]?.description}
+              </p>
+
+              <div className="mt-5 grid gap-4">
+                <OptionGroup label="Color" options={product.colors} value={selectedColor} onChange={setSelectedColor} />
+                <OptionGroup label="Size" options={product.sizes} value={selectedSize} onChange={setSelectedSize} />
+              </div>
+
+              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-white/10 py-3 text-center font-mono text-[9px] uppercase tracking-widest text-foreground/55">
+                <div className="grid place-items-center gap-1"><Truck size={14} /> 48h</div>
+                <div className="grid place-items-center gap-1"><Shield size={14} /> Real</div>
+                <div className="grid place-items-center gap-1"><Package size={14} /> Tagged</div>
+              </div>
+
+              <button
+                onClick={() => onAdd(product, selectedColor, selectedSize)}
+                disabled={!selectedColor || !selectedSize}
+                className="mt-4 w-full bg-primary py-3.5 font-display text-lg uppercase tracking-widest text-primary-foreground transition hover:bg-accent disabled:opacity-40"
+              >
+                Add ${product.price} to Cart
+              </button>
+            </div>
+          </motion.div>
+        </motion.div>
       )}
     </AnimatePresence>
   );
@@ -954,17 +921,21 @@ function OptionGroup({
 }) {
   return (
     <div>
-      <p className="mb-2 font-mono text-xs uppercase text-foreground/50">Select {label}</p>
-      <div className="grid grid-cols-2 gap-2">
+      <p className="mb-2 font-mono text-xs uppercase text-foreground/50" id={`${label}-options`}>
+        Select {label}
+      </p>
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby={`${label}-options`}>
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onChange(option)}
+            role="radio"
+            aria-checked={value === option}
             className={`border px-3 py-3 font-mono text-xs uppercase transition ${
               value === option
-                ? "border-white bg-white text-black"
-                : "border-white/15 bg-white/5 text-foreground hover:border-white/40"
+                ? "border-primary bg-primary text-primary-foreground shadow-vault-glow"
+                : "border-white/15 bg-white/5 text-foreground hover:border-primary/70 focus-visible:border-primary"
             }`}
           >
             {option}

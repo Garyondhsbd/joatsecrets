@@ -179,6 +179,11 @@
   textarea {
     font: inherit;
   }
+
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 3px;
+  }
 }
 
 @layer utilities {
@@ -243,6 +248,25 @@
       0 12px 40px -10px rgba(255, 30, 50, 0.45),
       0 0 0 1px rgba(255, 50, 70, 0.35);
     border-color: rgba(255, 60, 80, 0.5);
+  }
+
+  .crimson-hover:active {
+    transform: translateY(-1px) scale(0.995);
+  }
+
+  .product-card-media img {
+    transform: scale(1.04);
+  }
+
+  .product-card-media:hover img,
+  .group:hover .product-card-media img {
+    transform: scale(1.11);
+  }
+
+  .modal-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--vault-crimson) 70%, transparent) transparent;
+    overscroll-behavior: contain;
   }
 
   @keyframes starfield-drift {
