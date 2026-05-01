@@ -782,11 +782,7 @@ function ProductDetailDialog({
     if (!product) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && onClose();
     window.addEventListener("keydown", onKey);
-    document.body.style.overflow = "hidden";
-    return () => {
-      window.removeEventListener("keydown", onKey);
-      document.body.style.overflow = "";
-    };
+    return () => window.removeEventListener("keydown", onKey);
   }, [product, onClose]);
 
   return (
@@ -796,95 +792,70 @@ function ProductDetailDialog({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="fixed inset-0 z-50 grid place-items-center bg-black/85 p-3 backdrop-blur-md"
+          transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
+          className="fixed inset-0 z-50 grid place-items-center bg-black/75 p-4 backdrop-blur-sm"
           onClick={onClose}
         >
           <motion.div
-            initial={{ y: 20, opacity: 0, scale: 0.98 }}
-            animate={{ y: 0, opacity: 1, scale: 1 }}
-            exit={{ y: 20, opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
-            className="relative grid max-h-[92dvh] w-full max-w-4xl grid-cols-1 overflow-hidden border border-white/10 bg-card text-foreground shadow-2xl md:grid-cols-2"
+            initial={{ opacity: 0, scale: 0.92 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.94 }}
+            transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
+            className="relative w-full max-w-md overflow-hidden border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
             onClick={(e) => e.stopPropagation()}
+            style={{ willChange: "transform, opacity" }}
           >
             <button
               onClick={onClose}
               aria-label="Close"
-              className="absolute right-3 top-3 z-10 grid h-9 w-9 place-items-center bg-white/95 text-black shadow transition hover:bg-white"
+              className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center bg-white/95 text-black transition hover:bg-white"
             >
-              <X size={18} />
+              <X size={16} />
             </button>
 
-            <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-white/[0.04] to-transparent md:aspect-auto">
+            <div className="relative aspect-[4/5] overflow-hidden bg-black">
               <img
                 src={product.image}
                 alt={product.name}
+                loading="eager"
+                decoding="async"
                 className="absolute inset-0 h-full w-full object-cover"
               />
-              <div className="absolute left-4 top-4 bg-white/95 px-2 py-1 font-mono text-[10px] uppercase tracking-widest text-black">
+              <div className="absolute left-3 top-3 bg-white/95 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black">
                 {product.brand}
               </div>
             </div>
 
-            <div className="flex max-h-[92dvh] flex-col overflow-y-auto p-6 md:p-8">
+            <div className="p-5">
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
-                {product.category} · {product.id}
+                {product.category}
               </p>
-              <h2 className="mt-2 font-display text-4xl uppercase leading-tight tracking-wide sm:text-5xl">
+              <h2 className="mt-1 font-display text-3xl uppercase leading-tight tracking-wide">
                 {product.name}
               </h2>
-              <p className="mt-3 font-display text-3xl">${product.price}</p>
+              <div className="mt-2 flex items-baseline justify-between">
+                <p className="font-display text-2xl">${product.price}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/45">
+                  {product.sizes.length} sz · {product.colors.length} clr
+                </p>
+              </div>
 
-              <p className="mt-5 font-body text-sm leading-relaxed text-foreground/80">
-                {productCopy[product.brand]?.tagline}
-              </p>
-              <p className="mt-2 font-body text-sm leading-relaxed text-foreground/65">
+              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75 line-clamp-3">
                 {productCopy[product.brand]?.description}
               </p>
 
-              <div className="mt-5 grid gap-2">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-                  Available
-                </p>
-                <div className="flex flex-wrap gap-2 font-mono text-xs">
-                  {product.sizes.map((s) => (
-                    <span key={s} className="border border-white/15 px-2 py-1">
-                      {s}
-                    </span>
-                  ))}
-                </div>
-                <div className="mt-1 flex flex-wrap gap-2 font-mono text-xs text-foreground/65">
-                  {product.colors.map((c) => (
-                    <span key={c}>· {c}</span>
-                  ))}
-                </div>
-              </div>
-
-              <ul className="mt-5 grid gap-2 border-t border-white/10 pt-4 font-body text-sm text-foreground/80">
-                {(productCopy[product.brand]?.details ?? []).map((d) => (
-                  <li key={d} className="flex items-start gap-2">
-                    <span className="mt-2 inline-block h-1 w-1 bg-foreground" />
-                    {d}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-5 grid grid-cols-3 gap-3 border-y border-white/10 py-4 text-center font-mono text-[9px] uppercase tracking-widest text-foreground/60">
-                <div className="grid place-items-center gap-1"><Truck size={16} /> 48h ship</div>
-                <div className="grid place-items-center gap-1"><Shield size={16} /> Authentic</div>
-                <div className="grid place-items-center gap-1"><Package size={16} /> Tagged</div>
+              <div className="mt-4 grid grid-cols-3 gap-2 border-y border-white/10 py-3 text-center font-mono text-[9px] uppercase tracking-widest text-foreground/55">
+                <div className="grid place-items-center gap-1"><Truck size={14} /> 48h</div>
+                <div className="grid place-items-center gap-1"><Shield size={14} /> Real</div>
+                <div className="grid place-items-center gap-1"><Package size={14} /> Tagged</div>
               </div>
 
               <button
                 onClick={() => onConfigure(product)}
-                className="mt-5 w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90"
+                className="mt-4 w-full bg-gradient-to-r from-[oklch(0.48_0.24_25)] to-[oklch(0.55_0.27_25)] py-3.5 font-display text-lg uppercase tracking-widest text-white transition hover:brightness-110"
               >
                 Add to Cart
               </button>
-              <p className="mt-3 text-center font-mono text-[10px] uppercase tracking-widest text-foreground/40">
-                Select size & color on next step
-              </p>
             </div>
           </motion.div>
         </motion.div>
