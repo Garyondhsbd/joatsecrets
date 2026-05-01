@@ -262,6 +262,184 @@
     "image": "/products/actual/sky-blue-sp5der.jpg"
   },
   {
+    "id": "DT-001",
+    "brand": "DENIM TEARS",
+    "category": "Denim Tears",
+    "name": "Black Denim Tears Shorts",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Black"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/denim-tears-black.jpg"
+  },
+  {
+    "id": "DT-002",
+    "brand": "DENIM TEARS",
+    "category": "Denim Tears",
+    "name": "Gray Denim Tears Shorts",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Gray"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/denim-tears-gray.jpg"
+  },
+  {
+    "id": "DT-003",
+    "brand": "DENIM TEARS",
+    "category": "Denim Tears",
+    "name": "Pink Denim Tears Shorts",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Pink"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/denim-tears-pink.jpg"
+  },
+  {
+    "id": "DT-004",
+    "brand": "DENIM TEARS",
+    "category": "Denim Tears",
+    "name": "Navy Blue Denim Tears Shorts",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Navy Blue"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/denim-tears-navy.jpg"
+  },
+  {
+    "id": "DT-005",
+    "brand": "DENIM TEARS",
+    "category": "Denim Tears",
+    "name": "Red Denim Tears Shorts",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Red"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/denim-tears-red.jpg"
+  },
+  {
+    "id": "DT-006",
+    "brand": "DENIM TEARS",
+    "category": "Denim Tears",
+    "name": "Light Blue Denim Tears Shorts",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Light Blue"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/denim-tears-light-blue.jpg"
+  },
+  {
+    "id": "CH-001",
+    "brand": "CHROME HEARTS",
+    "category": "Chrome Hearts",
+    "name": "Green Chrome Hearts Tee",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Green"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/chrome-hearts-green.jpg"
+  },
+  {
+    "id": "CH-002",
+    "brand": "CHROME HEARTS",
+    "category": "Chrome Hearts",
+    "name": "Black and White Chrome Tee",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Black / White"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/chrome-hearts-black-white.jpg"
+  },
+  {
+    "id": "CH-003",
+    "brand": "CHROME HEARTS",
+    "category": "Chrome Hearts",
+    "name": "Purple Chrome Tee",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Purple"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "image": "/products/added/chrome-hearts-purple.jpg"
+  },
+  {
+    "id": "CH-004",
+    "brand": "CHROME HEARTS",
+    "category": "Chrome Hearts",
+    "name": "Red Chrome Tee",
+    "price": 60,
+    "stock": 8,
+    "colors": [
+      "Red"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L"
+    ],
+    "image": "/products/added/chrome-hearts-red.jpg"
+  },
+  {
     "id": "ES-001",
     "brand": "ESSENTIALS",
     "category": "Essentials Shorts",
