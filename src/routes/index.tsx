@@ -927,17 +927,21 @@ function OptionGroup({
 }) {
   return (
     <div>
-      <p className="mb-2 font-mono text-xs uppercase text-foreground/50">Select {label}</p>
-      <div className="grid grid-cols-2 gap-2">
+      <p className="mb-2 font-mono text-xs uppercase text-foreground/50" id={`${label}-options`}>
+        Select {label}
+      </p>
+      <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby={`${label}-options`}>
         {options.map((option) => (
           <button
             key={option}
             type="button"
             onClick={() => onChange(option)}
+            role="radio"
+            aria-checked={value === option}
             className={`border px-3 py-3 font-mono text-xs uppercase transition ${
               value === option
-                ? "border-white bg-white text-black"
-                : "border-white/15 bg-white/5 text-foreground hover:border-white/40"
+                ? "border-primary bg-primary text-primary-foreground shadow-vault-glow"
+                : "border-white/15 bg-white/5 text-foreground hover:border-primary/70 focus-visible:border-primary"
             }`}
           >
             {option}
