@@ -763,6 +763,18 @@ const productCopy: Record<string, { tagline: string; description: string; detail
       "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
     details: ["French terry interior", "Rhinestone graphics", "Oversized streetwear fit", "Authentic Sp5der tags"],
   },
+  "DENIM TEARS": {
+    tagline: "Denim Tears — cotton wreath staples.",
+    description:
+      "Premium fleece shorts with the signature wreath layout. Clean everyday streetwear piece, framed for easy size selection.",
+    details: ["Fleece short", "Elastic drawstring waist", "Cotton wreath graphic", "Ships within 48h"],
+  },
+  "CHROME HEARTS": {
+    tagline: "Chrome Hearts — statement graphic tees.",
+    description:
+      "Streetwear graphic tee with strong back-print presence and an easy everyday cut. Select your size before adding to cart.",
+    details: ["Cotton tee", "Graphic print", "Streetwear fit", "Ships within 48h"],
+  },
   ESSENTIALS: {
     tagline: "Fear of God Essentials — elevated minimalism.",
     description:
