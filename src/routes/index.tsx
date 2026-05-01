@@ -716,13 +716,13 @@ function ProductCard({
       onClick={handleOpen}
       aria-label={`View ${product.name}, ${product.brand}, $${product.price}`}
     >
-      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
+      <div className="product-card-media relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
           decoding="async"
-          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+          className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
         <div className="absolute left-2 top-2 bg-white/95 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-black">
@@ -836,7 +836,7 @@ function ProductDetailDialog({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
-            className="relative grid max-h-[92dvh] w-full max-w-4xl overflow-y-auto border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)] sm:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]"
+            className="modal-scrollbar relative grid max-h-[92dvh] w-full max-w-4xl overflow-y-auto border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)] sm:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]"
             onClick={(e) => e.stopPropagation()}
             style={{ willChange: "transform, opacity" }}
             role="dialog"
