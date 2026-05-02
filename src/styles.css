@@ -243,16 +243,34 @@
   }
   .crimson-hover:hover,
   .crimson-hover:focus-visible {
-    transform: translateY(-4px);
     box-shadow:
       0 12px 40px -10px rgba(255, 30, 50, 0.45),
       0 0 0 1px rgba(255, 50, 70, 0.35);
     border-color: rgba(255, 60, 80, 0.5);
   }
 
-  .crimson-hover:active {
-    transform: translateY(-1px) scale(0.995);
+  /* 3D tilt — combines parent rotation with the lift */
+  .tilt-card {
+    transform-style: preserve-3d;
+    perspective: 800px;
+    --rx: 0deg;
+    --ry: 0deg;
+    transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry));
   }
+  .tilt-card.crimson-hover:hover,
+  .tilt-card.crimson-hover:focus-visible {
+    transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-4px);
+  }
+  .tilt-card.crimson-hover:active {
+    transform: perspective(800px) rotateX(var(--rx)) rotateY(var(--ry)) translateY(-1px) scale(0.995);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .tilt-card { transform: none !important; }
+  }
+
+  /* Parallax layers driven by SpaceBackdrop scroll listener */
+  .parallax-slow { transform: translate3d(0, var(--py-slow, 0px), 0); }
+  .parallax-fast { transform: translate3d(0, var(--py-fast, 0px), 0); }
 
   .product-card-media img {
     transform: scale(1.04);
