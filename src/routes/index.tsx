@@ -1,10 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send } from "lucide-react";
+import {
+  Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send,
+  MessageCircle, Loader2, Check, ChevronRight, ChevronLeft,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import products from "@/data/products.json";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -20,62 +24,72 @@ export const Route = createFileRoute("/")({
 
 type Product = (typeof products)[number];
 type CartItem = Product & { selectedColor: string; selectedSize: string };
-type OrderDetails = { name: string; address: string; telegram: string };
-type OrderStage = "cart" | "details" | "assigning" | "pay";
+
+interface AddressData {
+  line1: string;
+  line2: string;
+  city: string;
+  region: string;
+  postal: string;
+  country: string;
+}
+interface CheckoutData {
+  fullName: string;
+  email: string;
+  phone: string;
+  shipping: AddressData;
+  billing: AddressData;
+  sameAsBilling: boolean;
+  notes: string;
+}
 
 const ACCESS_KEY = "joat-vault-access-2026";
+const TOS_KEY = "joat-tos-accepted-v1";
 const PRODUCT_OPTION_KEY = "joat-product-options";
+
+const emptyAddress: AddressData = { line1: "", line2: "", city: "", region: "", postal: "", country: "" };
+const emptyCheckout: CheckoutData = {
+  fullName: "", email: "", phone: "",
+  shipping: { ...emptyAddress }, billing: { ...emptyAddress },
+  sameAsBilling: true, notes: "",
+};
+
+const productSections = [
+  "Bape Tees", "Sp5der Hoodies", "Denim Tears", "Chrome Hearts",
+  "Essentials Shorts", "Hellstar Tees", "Fragrance",
+] as const;
 
 const readProductOptionMemory = (productId: string) => {
   try {
-    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<
-      string,
-      { color?: string; size?: string }
-    >;
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<string, { color?: string; size?: string }>;
     return saved[productId] ?? {};
-  } catch {
-    return {};
-  }
+  } catch { return {}; }
 };
-
 const writeProductOptionMemory = (productId: string, color: string, size: string) => {
   try {
-    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<
-      string,
-      { color?: string; size?: string }
-    >;
-    localStorage.setItem(
-      PRODUCT_OPTION_KEY,
-      JSON.stringify({ ...saved, [productId]: { color, size } }),
-    );
+    const saved = JSON.parse(localStorage.getItem(PRODUCT_OPTION_KEY) ?? "{}") as Record<string, { color?: string; size?: string }>;
+    localStorage.setItem(PRODUCT_OPTION_KEY, JSON.stringify({ ...saved, [productId]: { color, size } }));
   } catch {
     localStorage.setItem(PRODUCT_OPTION_KEY, JSON.stringify({ [productId]: { color, size } }));
   }
 };
 
-const productSections = [
-  "Bape Tees",
-  "Sp5der Hoodies",
-  "Denim Tears",
-  "Chrome Hearts",
-  "Essentials Shorts",
-  "Hellstar Tees",
-  "Fragrance",
-] as const;
-
 function Index() {
   const [unlocked, setUnlocked] = useState(false);
+  const [tosAccepted, setTosAccepted] = useState(false);
+  const [tosOpen, setTosOpen] = useState(false);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
   const [viewingProduct, setViewingProduct] = useState<Product | null>(null);
-  const [stage, setStage] = useState<OrderStage>("cart");
-  const [orderId, setOrderId] = useState("");
-  const [details, setDetails] = useState<OrderDetails>({ name: "", address: "", telegram: "" });
   const [query, setQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("All");
 
   useEffect(() => {
     setUnlocked(localStorage.getItem(ACCESS_KEY) === "granted");
+    const accepted = localStorage.getItem(TOS_KEY) === "yes";
+    setTosAccepted(accepted);
+    if (!accepted) setTosOpen(true);
   }, []);
 
   const total = cart.reduce((sum, item) => sum + item.price, 0);
@@ -85,14 +99,18 @@ function Index() {
     setCartOpen(true);
   };
 
-  const submitDetails = () => {
-    setStage("assigning");
-    window.setTimeout(() => {
-      setOrderId(
-        `JOAT-${Math.floor(500 + Math.random() * 400)}-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}`,
-      );
-      setStage("pay");
-    }, 900);
+  const removeFromCart = (idx: number) => setCart((items) => items.filter((_, i) => i !== idx));
+
+  const acceptTos = () => {
+    try { localStorage.setItem(TOS_KEY, "yes"); } catch {}
+    setTosAccepted(true);
+    setTosOpen(false);
+  };
+
+  const beginCheckout = () => {
+    if (!tosAccepted) { setTosOpen(true); return; }
+    setCartOpen(false);
+    setCheckoutOpen(true);
   };
 
   return (
@@ -129,24 +147,50 @@ function Index() {
         open={cartOpen}
         cart={cart}
         total={total}
-        stage={stage}
-        details={details}
-        orderId={orderId}
-        setDetails={setDetails}
+        onRemove={removeFromCart}
         onClose={() => setCartOpen(false)}
-        onStage={setStage}
-        onSubmitDetails={submitDetails}
+        onCheckout={beginCheckout}
       />
+
+      <CheckoutDialog
+        open={checkoutOpen}
+        cart={cart}
+        total={total}
+        onClose={() => setCheckoutOpen(false)}
+        onComplete={() => setCart([])}
+      />
+
+      <TosModal open={tosOpen} onAccept={acceptTos} dismissible={tosAccepted} onDismiss={() => setTosOpen(false)} />
+
+      {unlocked && <MaskWidget />}
     </main>
   );
 }
 
+/* ---------- Backdrop with parallax ---------- */
 function SpaceBackdrop() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        const y = window.scrollY;
+        if (ref.current) {
+          ref.current.style.setProperty("--py-slow", `${y * 0.15}px`);
+          ref.current.style.setProperty("--py-fast", `${y * 0.35}px`);
+        }
+        raf = 0;
+      });
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => { window.removeEventListener("scroll", onScroll); cancelAnimationFrame(raf); };
+  }, []);
   return (
-    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+    <div ref={ref} aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <div className="absolute inset-0 deep-space-gradient" />
-      <div className="absolute inset-0 starfield" />
-      <div className="absolute inset-0 nebula-drift" />
+      <div className="absolute inset-0 starfield parallax-slow" />
+      <div className="absolute inset-0 nebula-drift parallax-fast" />
       <div className="absolute inset-0 jester-watermark" />
     </div>
   );
@@ -154,16 +198,12 @@ function SpaceBackdrop() {
 
 function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
   const lockedRef = useRef(false);
-
   const enterVault = () => {
     if (lockedRef.current) return;
     lockedRef.current = true;
-    try {
-      localStorage.setItem(ACCESS_KEY, "granted");
-    } catch {}
+    try { localStorage.setItem(ACCESS_KEY, "granted"); } catch {}
     onUnlock();
   };
-
   return (
     <motion.section
       exit={{ opacity: 0, scale: 1.05, filter: "blur(8px)" }}
@@ -176,17 +216,11 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 flex w-full max-w-xl flex-col items-center text-center"
       >
-        <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-vault-quiet">
-          Source · Pack · Ship
-        </p>
-        <h1 className="mt-3 font-display text-7xl uppercase leading-none text-foreground sm:text-9xl">
-          J.O.A.T
-        </h1>
+        <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-vault-quiet">Source · Pack · Ship</p>
+        <h1 className="mt-3 font-display text-7xl uppercase leading-none text-foreground sm:text-9xl">J.O.A.T</h1>
         <p className="mt-4 max-w-sm font-body text-sm text-vault-quiet">
-          Jack of all trades. Master of the source. Designer, streetwear & fragrance — sourced
-          direct.
+          Jack of all trades. Master of the source. Designer, streetwear & fragrance — sourced direct.
         </p>
-
         <button
           type="button"
           onClick={enterVault}
@@ -195,11 +229,7 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
           <span className="relative z-10">Enter</span>
           <span className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/40 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
         </button>
-
-        <a
-          href="https://t.me/joatz"
-          className="mt-6 font-mono text-[10px] uppercase tracking-[0.3em] text-vault-quiet hover:text-foreground"
-        >
+        <a href="https://t.me/joatz" className="mt-6 font-mono text-[10px] uppercase tracking-[0.3em] text-vault-quiet hover:text-foreground">
           Telegram · @joatz
         </a>
       </motion.div>
@@ -208,21 +238,13 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
 }
 
 function VaultHub({
-  cart,
-  openProductDetail,
-  openCart,
-  query,
-  setQuery,
-  activeCategory,
-  setActiveCategory,
+  cart, openProductDetail, openCart, query, setQuery, activeCategory, setActiveCategory,
 }: {
   cart: CartItem[];
   openProductDetail: (product: Product) => void;
   openCart: () => void;
-  query: string;
-  setQuery: (q: string) => void;
-  activeCategory: string;
-  setActiveCategory: (c: string) => void;
+  query: string; setQuery: (q: string) => void;
+  activeCategory: string; setActiveCategory: (c: string) => void;
 }) {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -230,58 +252,36 @@ function VaultHub({
       const inCat = activeCategory === "All" || p.category === activeCategory;
       if (!inCat) return false;
       if (!q) return true;
-      return (
-        p.name.toLowerCase().includes(q) ||
-        p.brand.toLowerCase().includes(q) ||
-        p.category.toLowerCase().includes(q)
-      );
+      return p.name.toLowerCase().includes(q) || p.brand.toLowerCase().includes(q) || p.category.toLowerCase().includes(q);
     });
   }, [query, activeCategory]);
 
-  const sectionsToRender =
-    activeCategory === "All" ? productSections : ([activeCategory] as readonly string[]);
+  const sectionsToRender = activeCategory === "All" ? productSections : ([activeCategory] as readonly string[]);
 
   return (
     <motion.section
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.4 }}
+      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
       className="relative z-10 min-h-screen"
     >
       <VaultHeader
-        cartCount={cart.length}
-        openCart={openCart}
-        query={query}
-        setQuery={setQuery}
-        activeCategory={activeCategory}
-        setActiveCategory={setActiveCategory}
+        cartCount={cart.length} openCart={openCart}
+        query={query} setQuery={setQuery}
+        activeCategory={activeCategory} setActiveCategory={setActiveCategory}
       />
       <BackgroundMusic />
 
       <section className="relative pt-8">
         {query.trim() ? (
-          <CatalogueGrid
-            title={`Search · "${query}"`}
-            count={filtered.length}
-            items={filtered}
-            onOpen={openProductDetail}
-          />
+          <CatalogueGrid title={`Search · "${query}"`} count={filtered.length} items={filtered} onOpen={openProductDetail} />
         ) : (
           sectionsToRender.map((section) => {
             const sectionProducts = filtered.filter((p) => p.category === section);
             if (sectionProducts.length === 0) return null;
             return (
-              <CatalogueGrid
-                key={section}
-                title={section}
-                count={sectionProducts.length}
-                items={sectionProducts}
-                onOpen={openProductDetail}
-              />
+              <CatalogueGrid key={section} title={section} count={sectionProducts.length} items={sectionProducts} onOpen={openProductDetail} />
             );
           })
         )}
-
         {query.trim() && filtered.length === 0 && (
           <p className="mx-auto max-w-7xl px-4 py-20 text-center font-mono text-sm uppercase text-vault-quiet">
             Nothing matches "{query}"
@@ -297,23 +297,13 @@ function VaultHub({
 }
 
 function CatalogueGrid({
-  title,
-  count,
-  items,
-  onOpen,
-}: {
-  title: string;
-  count: number;
-  items: Product[];
-  onOpen: (product: Product) => void;
-}) {
+  title, count, items, onOpen,
+}: { title: string; count: number; items: Product[]; onOpen: (product: Product) => void }) {
   return (
     <section className="relative py-8">
       <div className="mx-auto max-w-7xl px-3 sm:px-5">
         <div className="mb-5 flex items-end justify-between gap-3 border-b border-white/10 pb-3">
-          <h2 className="font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">
-            {title}
-          </h2>
+          <h2 className="font-display text-4xl uppercase leading-none text-foreground sm:text-5xl">{title}</h2>
           <p className="font-mono text-[10px] uppercase tracking-[0.25em] text-vault-quiet">
             {count} {count === 1 ? "item" : "items"}
           </p>
@@ -329,116 +319,62 @@ function CatalogueGrid({
 }
 
 function VaultHeader({
-  cartCount,
-  openCart,
-  query,
-  setQuery,
-  activeCategory,
-  setActiveCategory,
+  cartCount, openCart, query, setQuery, activeCategory, setActiveCategory,
 }: {
-  cartCount: number;
-  openCart: () => void;
-  query: string;
-  setQuery: (q: string) => void;
-  activeCategory: string;
-  setActiveCategory: (c: string) => void;
+  cartCount: number; openCart: () => void;
+  query: string; setQuery: (q: string) => void;
+  activeCategory: string; setActiveCategory: (c: string) => void;
 }) {
   const [navOpen, setNavOpen] = useState(false);
   const categories = ["All", ...productSections];
-
   return (
     <header className="sticky top-0 z-30 border-b border-white/10 bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center gap-3 px-4 py-3">
-        <button
-          onClick={() => setNavOpen((v) => !v)}
-          className="grid h-9 w-9 place-items-center text-foreground/80 hover:text-foreground md:hidden"
-          aria-label="Open menu"
-        >
+        <button onClick={() => setNavOpen((v) => !v)} className="grid h-9 w-9 place-items-center text-foreground/80 hover:text-foreground md:hidden" aria-label="Open menu">
           <Menu size={20} />
         </button>
-
-        <a href="/" className="font-display text-3xl uppercase leading-none text-foreground sm:text-4xl">
-          J.O.A.T
-        </a>
-
+        <a href="/" className="font-display text-3xl uppercase leading-none text-foreground sm:text-4xl">J.O.A.T</a>
         <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
           {categories.map((c) => (
             <button
-              key={c}
-              onClick={() => setActiveCategory(c)}
-              className={`px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] transition ${
-                activeCategory === c
-                  ? "bg-white text-black"
-                  : "text-foreground/60 hover:text-foreground"
-              }`}
-            >
-              {c}
-            </button>
+              key={c} onClick={() => setActiveCategory(c)}
+              className={`px-3 py-1.5 font-mono text-[11px] uppercase tracking-[0.2em] transition ${activeCategory === c ? "bg-white text-black" : "text-foreground/60 hover:text-foreground"}`}
+            >{c}</button>
           ))}
         </nav>
-
         <div className="ml-auto flex items-center gap-2">
           <div className="relative hidden sm:block">
-            <Search
-              size={14}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
-            />
+            <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
             <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search drops…"
+              value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drops…"
               className="w-56 border border-white/15 bg-white/5 py-2 pl-9 pr-3 font-mono text-xs text-foreground placeholder:text-foreground/40 focus:border-white/40 focus:outline-none"
             />
           </div>
-          <a
-            href="https://t.me/joatz"
-            className="hidden h-9 w-9 place-items-center text-foreground/70 hover:text-foreground sm:grid"
-            aria-label="Telegram"
-          >
+          <a href="https://t.me/joatz" className="hidden h-9 w-9 place-items-center text-foreground/70 hover:text-foreground sm:grid" aria-label="Telegram">
             <Send size={18} />
           </a>
-          <button
-            onClick={openCart}
-            className="relative grid h-9 w-9 place-items-center text-foreground hover:text-white"
-            aria-label="Open cart"
-          >
+          <button onClick={openCart} className="relative grid h-9 w-9 place-items-center text-foreground hover:text-white" aria-label="Open cart">
             <ShoppingBag size={20} />
             {cartCount > 0 && (
-              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-white px-1 font-mono text-[9px] text-black">
-                {cartCount}
-              </span>
+              <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-white px-1 font-mono text-[9px] text-black">{cartCount}</span>
             )}
           </button>
         </div>
       </div>
-
-      {/* Mobile search + categories */}
       <div className="border-t border-white/10 px-4 py-2 md:hidden">
         <div className="relative mb-2">
-          <Search
-            size={14}
-            className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40"
-          />
+          <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
           <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search drops…"
+            value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drops…"
             className="w-full border border-white/15 bg-white/5 py-2 pl-9 pr-3 font-mono text-xs text-foreground placeholder:text-foreground/40 focus:border-white/40 focus:outline-none"
           />
         </div>
         <div className={`flex gap-2 overflow-x-auto pb-1 ${navOpen ? "flex-wrap" : ""}`}>
           {categories.map((c) => (
             <button
-              key={c}
-              onClick={() => setActiveCategory(c)}
-              className={`shrink-0 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] transition ${
-                activeCategory === c
-                  ? "bg-white text-black"
-                  : "border border-white/15 text-foreground/70"
-              }`}
-            >
-              {c}
-            </button>
+              key={c} onClick={() => setActiveCategory(c)}
+              className={`shrink-0 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] transition ${activeCategory === c ? "bg-white text-black" : "border border-white/15 text-foreground/70"}`}
+            >{c}</button>
           ))}
         </div>
       </div>
@@ -446,6 +382,7 @@ function VaultHeader({
   );
 }
 
+/* ---------- Background music (unchanged engine) ---------- */
 function BackgroundMusic() {
   const ctxRef = useRef<AudioContext | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -465,166 +402,88 @@ function BackgroundMusic() {
     cleanupRef.current?.();
     const ctx = ctxRef.current ?? new AudioContext();
     ctxRef.current = ctx;
-    try {
-      await ctx.resume();
-    } catch {
-      setStarting(false);
-      return;
-    }
+    try { await ctx.resume(); } catch { setStarting(false); return; }
 
-    const master = ctx.createGain();
-    master.gain.value = 0.16;
+    const master = ctx.createGain(); master.gain.value = 0.16;
     const compressor = ctx.createDynamicsCompressor();
-    compressor.threshold.value = -20;
-    compressor.knee.value = 24;
-    compressor.ratio.value = 6;
-    compressor.attack.value = 0.008;
-    compressor.release.value = 0.18;
-    const lpf = ctx.createBiquadFilter();
-    lpf.type = "lowpass";
-    lpf.frequency.value = 5200;
-    master.connect(compressor);
-    compressor.connect(lpf);
-    lpf.connect(ctx.destination);
+    compressor.threshold.value = -20; compressor.knee.value = 24; compressor.ratio.value = 6;
+    compressor.attack.value = 0.008; compressor.release.value = 0.18;
+    const lpf = ctx.createBiquadFilter(); lpf.type = "lowpass"; lpf.frequency.value = 5200;
+    master.connect(compressor); compressor.connect(lpf); lpf.connect(ctx.destination);
 
-    // 808 sub-bass — drill style sliding bass
     const play808 = (when: number, freq: number, dur: number) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(freq * 2, when);
       osc.frequency.exponentialRampToValueAtTime(freq, when + 0.05);
       g.gain.setValueAtTime(0, when);
       g.gain.linearRampToValueAtTime(0.5, when + 0.02);
       g.gain.exponentialRampToValueAtTime(0.001, when + dur);
-      osc.connect(g);
-      g.connect(master);
-      osc.start(when);
-      osc.stop(when + dur + 0.05);
+      osc.connect(g); g.connect(master); osc.start(when); osc.stop(when + dur + 0.05);
     };
-
-    // Punchy kick
     const playKick = (when: number) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
       osc.type = "sine";
       osc.frequency.setValueAtTime(150, when);
       osc.frequency.exponentialRampToValueAtTime(40, when + 0.12);
       g.gain.setValueAtTime(0, when);
       g.gain.linearRampToValueAtTime(0.55, when + 0.005);
       g.gain.exponentialRampToValueAtTime(0.001, when + 0.28);
-      osc.connect(g);
-      g.connect(master);
-      osc.start(when);
-      osc.stop(when + 0.32);
+      osc.connect(g); g.connect(master); osc.start(when); osc.stop(when + 0.32);
     };
-
-    // Crisp hi-hat
     const playHat = (when: number, open = false) => {
       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.08, ctx.sampleRate);
       const d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++)
-        d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * (open ? 0.05 : 0.012)));
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * (open ? 0.05 : 0.012)));
       const src = ctx.createBufferSource();
-      const hp = ctx.createBiquadFilter();
-      hp.type = "highpass";
-      hp.frequency.value = 7200;
-      const g = ctx.createGain();
-      g.gain.value = open ? 0.1 : 0.13;
-      src.buffer = buf;
-      src.connect(hp);
-      hp.connect(g);
-      g.connect(master);
-      src.start(when);
+      const hp = ctx.createBiquadFilter(); hp.type = "highpass"; hp.frequency.value = 7200;
+      const g = ctx.createGain(); g.gain.value = open ? 0.1 : 0.13;
+      src.buffer = buf; src.connect(hp); hp.connect(g); g.connect(master); src.start(when);
     };
-
-    // Snare / clap on 2 & 4
     const playSnare = (when: number) => {
       const buf = ctx.createBuffer(1, ctx.sampleRate * 0.22, ctx.sampleRate);
       const d = buf.getChannelData(0);
-      for (let i = 0; i < d.length; i++)
-        d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.06));
+      for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.06));
       const src = ctx.createBufferSource();
-      const bp = ctx.createBiquadFilter();
-      bp.type = "bandpass";
-      bp.frequency.value = 1700;
-      const g = ctx.createGain();
-      g.gain.value = 0.18;
-      src.buffer = buf;
-      src.connect(bp);
-      bp.connect(g);
-      g.connect(master);
-      src.start(when);
+      const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.frequency.value = 1700;
+      const g = ctx.createGain(); g.gain.value = 0.18;
+      src.buffer = buf; src.connect(bp); bp.connect(g); g.connect(master); src.start(when);
     };
-
-    // Dark minor pad
     const playPad = (when: number, freq: number, dur: number) => {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.value = freq;
-      osc.detune.value = (Math.random() - 0.5) * 8;
-      const f = ctx.createBiquadFilter();
-      f.type = "lowpass";
-      f.frequency.value = 700;
-      f.Q.value = 4;
+      const osc = ctx.createOscillator(); const g = ctx.createGain();
+      osc.type = "sawtooth"; osc.frequency.value = freq; osc.detune.value = (Math.random() - 0.5) * 8;
+      const f = ctx.createBiquadFilter(); f.type = "lowpass"; f.frequency.value = 700; f.Q.value = 4;
       g.gain.setValueAtTime(0, when);
       g.gain.linearRampToValueAtTime(0.05, when + 0.6);
       g.gain.linearRampToValueAtTime(0, when + dur);
-      osc.connect(f);
-      f.connect(g);
-      g.connect(master);
-      osc.start(when);
-      osc.stop(when + dur + 0.1);
+      osc.connect(f); f.connect(g); g.connect(master); osc.start(when); osc.stop(when + dur + 0.1);
     };
 
-    // 146 BPM trap pattern — heavy sub, clean hats, restrained volume
-    const bpm = 146;
-    const beat = 60 / bpm; // ~0.428s
-    const sixteenth = beat / 4;
-    const barDur = beat * 4;
-    // 808 pattern in C minor: C2(65.4), Eb2(77.8), G2(98.0), Bb2(116.5)
-    const bassPattern = [
+    const bpm = 146; const beat = 60 / bpm; const sixteenth = beat / 4; const barDur = beat * 4;
+    const bassPattern: Array<[number, number, number]> = [
       [0, 55.0, beat * 1.25],
       [beat * 1.5, 65.4, beat * 0.75],
       [beat * 2.25, 46.2, beat * 1.5],
     ];
-    // Pad notes per bar (cycles)
     const padCycle = [
-      [130.8, 155.6, 196.0], // Cm
-      [123.5, 146.8, 185.0], // Bdim-ish
-      [138.6, 174.6, 207.7], // Db
-      [130.8, 155.6, 196.0], // Cm
+      [130.8, 155.6, 196.0], [123.5, 146.8, 185.0], [138.6, 174.6, 207.7], [130.8, 155.6, 196.0],
     ];
 
     let bar = 0;
     const schedule = () => {
       const now = ctx.currentTime + 0.05;
-      // schedule 2 bars ahead
       for (let b = 0; b < 2; b++) {
         const barStart = now + b * barDur;
-        // pad
         padCycle[(bar + b) % padCycle.length].forEach((f) => playPad(barStart, f, barDur));
-        // kicks
-        playKick(barStart);
-        playKick(barStart + beat * 2);
-        playKick(barStart + beat * 2 + sixteenth * 2); // syncopated
-        // snares
-        playSnare(barStart + beat);
-        playSnare(barStart + beat * 3);
-        // hats — 16th notes with occasional rolls
+        playKick(barStart); playKick(barStart + beat * 2); playKick(barStart + beat * 2 + sixteenth * 2);
+        playSnare(barStart + beat); playSnare(barStart + beat * 3);
         for (let i = 0; i < 16; i++) {
           const t = barStart + i * sixteenth;
           if (i % 2 === 0) playHat(t);
           else if (Math.random() < 0.55) playHat(t);
-          if (i === 11) {
-            // triplet roll
-            playHat(t + sixteenth / 3);
-            playHat(t + (2 * sixteenth) / 3);
-          }
+          if (i === 11) { playHat(t + sixteenth / 3); playHat(t + (2 * sixteenth) / 3); }
           if (i === 7) playHat(t, true);
         }
-        // 808 bass
         bassPattern.forEach(([off, f, d]) => play808(barStart + off, f, d));
       }
       bar += 2;
@@ -638,31 +497,20 @@ function BackgroundMusic() {
         master.gain.cancelScheduledValues(ctx.currentTime);
         master.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.25);
       } catch {}
-      window.setTimeout(() => {
-        try {
-          master.disconnect();
-          compressor.disconnect();
-          lpf.disconnect();
-        } catch {}
-      }, 350);
+      window.setTimeout(() => { try { master.disconnect(); compressor.disconnect(); lpf.disconnect(); } catch {} }, 350);
     };
 
-    setPlaying(true);
-    setStarting(false);
+    setPlaying(true); setStarting(false);
   }, [playing, starting]);
 
   const toggle = () => (playing ? stop() : start());
-
   useEffect(() => () => cleanupRef.current?.(), []);
 
   return (
     <button
-      type="button"
-      onClick={toggle}
+      type="button" onClick={toggle}
       className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-white/15 bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white shadow-2xl backdrop-blur-md transition hover:border-white/40"
-      aria-label={playing ? "Pause music" : "Play music"}
-      aria-pressed={playing}
-      disabled={starting}
+      aria-label={playing ? "Pause music" : "Play music"} aria-pressed={playing} disabled={starting}
     >
       <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full">
         <span className={`album-disc-art ${playing ? "is-spinning" : ""}`} />
@@ -676,52 +524,45 @@ function BackgroundMusic() {
   );
 }
 
-function ProductCard({
-  product,
-  onOpen,
-}: {
-  product: Product;
-  onOpen: (product: Product) => void;
-}) {
+/* ---------- Product card with 3D tilt + scroll fade ---------- */
+function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: Product) => void }) {
   const ref = useRef<HTMLButtonElement | null>(null);
   const [shown, setShown] = useState(false);
 
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((e) => {
-          if (e.isIntersecting) {
-            setShown(true);
-            io.disconnect();
-          }
-        });
-      },
-      { rootMargin: "60px" },
-    );
+    const el = ref.current; if (!el) return;
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((e) => { if (e.isIntersecting) { setShown(true); io.disconnect(); } });
+    }, { rootMargin: "60px" });
     io.observe(el);
     return () => io.disconnect();
   }, []);
 
-  const handleOpen = () => onOpen(product);
+  const handleMove = (e: React.MouseEvent<HTMLButtonElement>) => {
+    const el = ref.current; if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.setProperty("--rx", `${(-y * 8).toFixed(2)}deg`);
+    el.style.setProperty("--ry", `${(x * 10).toFixed(2)}deg`);
+  };
+  const handleLeave = () => {
+    const el = ref.current; if (!el) return;
+    el.style.setProperty("--rx", `0deg`);
+    el.style.setProperty("--ry", `0deg`);
+  };
 
   return (
     <button
-      type="button"
-      ref={ref}
-      className={`crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-left text-foreground shadow-lg ${
-        shown ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
-      } transition-[opacity,transform] duration-500 ease-out`}
-      onClick={handleOpen}
+      type="button" ref={ref}
+      onMouseMove={handleMove} onMouseLeave={handleLeave}
+      className={`tilt-card crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-left text-foreground shadow-lg ${shown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"} transition-[opacity,transform] duration-700 ease-out`}
+      onClick={() => onOpen(product)}
       aria-label={`View ${product.name}, ${product.brand}, $${product.price}`}
     >
       <div className="product-card-media relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
         <img
-          src={product.image}
-          alt={product.name}
-          loading="lazy"
-          decoding="async"
+          src={product.image} alt={product.name} loading="lazy" decoding="async"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out"
         />
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
@@ -730,13 +571,9 @@ function ProductCard({
         </div>
       </div>
       <div className="grid gap-1 border-t border-white/10 p-3">
-        <h3 className="font-display text-lg uppercase leading-tight tracking-wide text-foreground line-clamp-1">
-          {product.name}
-        </h3>
+        <h3 className="font-display text-lg uppercase leading-tight tracking-wide text-foreground line-clamp-1">{product.name}</h3>
         <div className="flex items-end justify-between gap-2">
-          <p className="font-mono text-[9px] uppercase tracking-widest text-foreground/45">
-            {product.sizes.length} sz · {product.colors.length} clr
-          </p>
+          <p className="font-mono text-[9px] uppercase tracking-widest text-foreground/45">{product.sizes.length} sz · {product.colors.length} clr</p>
           <p className="font-display text-xl text-foreground">${product.price}</p>
         </div>
       </div>
@@ -747,69 +584,57 @@ function ProductCard({
 const productCopy: Record<string, { tagline: string; description: string; details: string[] }> = {
   BAPE: {
     tagline: "A Bathing Ape — Tokyo streetwear royalty.",
-    description:
-      "Heavyweight cotton construction with signature BAPE branding. Sourced direct, deadstock guaranteed authentic.",
+    description: "Heavyweight cotton construction with signature BAPE branding. Sourced direct, deadstock guaranteed authentic.",
     details: ["100% premium cotton", "Boxed and tagged", "Authenticated source", "Ships within 48h"],
   },
   SP5DER: {
     tagline: "Sp5der Worldwide — signature web graphics.",
-    description:
-      "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
+    description: "Plush French terry hoodie with rhinestone web detailing. Oversized fit, premium hand-feel.",
     details: ["French terry interior", "Rhinestone graphics", "Oversized streetwear fit", "Authentic Sp5der tags"],
   },
   "DENIM TEARS": {
     tagline: "Denim Tears — cotton wreath staples.",
-    description:
-      "Premium fleece shorts with the signature wreath layout. Clean everyday streetwear piece, framed for easy size selection.",
+    description: "Premium fleece shorts with the signature wreath layout. Clean everyday streetwear piece.",
     details: ["Fleece short", "Elastic drawstring waist", "Cotton wreath graphic", "Ships within 48h"],
   },
   "CHROME HEARTS": {
     tagline: "Chrome Hearts — statement graphic tees.",
-    description:
-      "Streetwear graphic tee with strong back-print presence and an easy everyday cut. Select your size before adding to cart.",
+    description: "Streetwear graphic tee with strong back-print presence and an easy everyday cut.",
     details: ["Cotton tee", "Graphic print", "Streetwear fit", "Ships within 48h"],
   },
   ESSENTIALS: {
     tagline: "Fear of God Essentials — elevated minimalism.",
-    description:
-      "Refined silhouette in muted tones. The everyday staple from Jerry Lorenzo's diffusion line.",
+    description: "Refined silhouette in muted tones. The everyday staple from Jerry Lorenzo's diffusion line.",
     details: ["Heavyweight cotton blend", "Relaxed athletic cut", "Tonal rubberized branding", "Original packaging"],
   },
   HELLSTAR: {
     tagline: "Hellstar Studios — LA cult graphic apparel.",
-    description:
-      "Garment-dyed heavyweight tee with bold front and back graphics. Limited drops, no restocks.",
+    description: "Garment-dyed heavyweight tee with bold front and back graphics. Limited drops, no restocks.",
     details: ["Heavyweight 240gsm cotton", "Vintage wash treatment", "Front + back prints", "Hellstar holographic tag"],
   },
   "DESIGNER FRAGRANCE": {
     tagline: "Designer fragrance — sealed, batch-coded, authentic.",
-    description:
-      "Sealed in original cellophane with verified batch codes. Original retail packaging.",
+    description: "Sealed in original cellophane with verified batch codes. Original retail packaging.",
     details: ["Eau de Parfum", "Sealed in cellophane", "Batch code verified", "Original retail box"],
   },
 };
 
+/* ---------- Product detail dialog with zoom-on-hover image ---------- */
 function ProductDetailDialog({
-  product,
-  onClose,
-  onAdd,
+  product, onClose, onAdd,
 }: {
-  product: Product | null;
-  onClose: () => void;
+  product: Product | null; onClose: () => void;
   onAdd: (product: Product, selectedColor: string, selectedSize: string) => void;
 }) {
   const [selectedColor, setSelectedColor] = useState("");
   const [selectedSize, setSelectedSize] = useState("");
+  const [zoom, setZoom] = useState({ active: false, x: 50, y: 50 });
 
   useEffect(() => {
     if (!product) return;
     const saved = readProductOptionMemory(product.id);
-    setSelectedColor(
-      saved.color && product.colors.includes(saved.color) ? saved.color : (product.colors[0] ?? ""),
-    );
-    setSelectedSize(
-      saved.size && product.sizes.includes(saved.size) ? saved.size : (product.sizes[0] ?? ""),
-    );
+    setSelectedColor(saved.color && product.colors.includes(saved.color) ? saved.color : (product.colors[0] ?? ""));
+    setSelectedSize(saved.size && product.sizes.includes(saved.size) ? saved.size : (product.sizes[0] ?? ""));
   }, [product]);
 
   useEffect(() => {
@@ -823,41 +648,39 @@ function ProductDetailDialog({
     <AnimatePresence>
       {product && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           transition={{ duration: 0.18, ease: [0.4, 0, 0.2, 1] }}
           className="fixed inset-0 z-50 grid items-end bg-black/80 p-3 sm:place-items-center sm:p-4"
-          onClick={onClose}
-          role="presentation"
+          onClick={onClose} role="presentation"
         >
           <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.94 }}
+            initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.94 }}
             transition={{ duration: 0.22, ease: [0.4, 0, 0.2, 1] }}
             className="modal-scrollbar relative grid max-h-[92dvh] w-full max-w-4xl overflow-y-auto border border-white/15 bg-card text-foreground shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)] sm:grid-cols-[minmax(0,1fr)_minmax(320px,0.82fr)]"
             onClick={(e) => e.stopPropagation()}
             style={{ willChange: "transform, opacity" }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="product-dialog-title"
+            role="dialog" aria-modal="true" aria-labelledby="product-dialog-title"
           >
-            <button
-              onClick={onClose}
-              aria-label="Close"
-              className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center bg-white/95 text-black transition hover:bg-white"
-            >
+            <button onClick={onClose} aria-label="Close" className="absolute right-2 top-2 z-10 grid h-8 w-8 place-items-center bg-white/95 text-black transition hover:bg-white">
               <X size={16} />
             </button>
 
-            <div className="relative min-h-[320px] overflow-hidden bg-black sm:sticky sm:top-0 sm:h-[92dvh]">
+            <div
+              className="relative min-h-[320px] overflow-hidden bg-black sm:sticky sm:top-0 sm:h-[92dvh]"
+              onMouseEnter={() => setZoom((z) => ({ ...z, active: true }))}
+              onMouseLeave={() => setZoom({ active: false, x: 50, y: 50 })}
+              onMouseMove={(e) => {
+                const r = (e.currentTarget as HTMLDivElement).getBoundingClientRect();
+                setZoom({ active: true, x: ((e.clientX - r.left) / r.width) * 100, y: ((e.clientY - r.top) / r.height) * 100 });
+              }}
+            >
               <img
-                src={product.image}
-                alt={product.name}
-                loading="eager"
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-contain sm:object-cover"
+                src={product.image} alt={product.name} loading="eager" decoding="async"
+                className="absolute inset-0 h-full w-full object-contain transition-transform duration-300 ease-out sm:object-cover"
+                style={{
+                  transform: zoom.active ? "scale(1.7)" : "scale(1)",
+                  transformOrigin: `${zoom.x}% ${zoom.y}%`,
+                }}
               />
               <div className="absolute left-3 top-3 bg-white/95 px-2 py-0.5 font-mono text-[10px] uppercase tracking-widest text-black">
                 {product.brand}
@@ -865,22 +688,13 @@ function ProductDetailDialog({
             </div>
 
             <div className="p-5 sm:p-6">
-              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">
-                {product.category}
-              </p>
-              <h2 id="product-dialog-title" className="mt-1 font-display text-4xl uppercase leading-tight tracking-wide">
-                {product.name}
-              </h2>
+              <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-foreground/50">{product.category}</p>
+              <h2 id="product-dialog-title" className="mt-1 font-display text-4xl uppercase leading-tight tracking-wide">{product.name}</h2>
               <div className="mt-2 flex items-baseline justify-between">
                 <p className="font-display text-2xl">${product.price}</p>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/45">
-                  {product.sizes.length} sz · {product.colors.length} clr
-                </p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/45">{product.sizes.length} sz · {product.colors.length} clr</p>
               </div>
-
-              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75">
-                {productCopy[product.brand]?.description}
-              </p>
+              <p className="mt-3 font-body text-sm leading-relaxed text-foreground/75">{productCopy[product.brand]?.description}</p>
 
               <div className="mt-5 grid gap-4">
                 <OptionGroup label="Color" options={product.colors} value={selectedColor} onChange={setSelectedColor} />
@@ -909,34 +723,16 @@ function ProductDetailDialog({
 }
 
 function OptionGroup({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string;
-  options: string[];
-  value: string;
-  onChange: (value: string) => void;
-}) {
+  label, options, value, onChange,
+}: { label: string; options: string[]; value: string; onChange: (value: string) => void }) {
   return (
     <div>
-      <p className="mb-2 font-mono text-xs uppercase text-foreground/50" id={`${label}-options`}>
-        Select {label}
-      </p>
+      <p className="mb-2 font-mono text-xs uppercase text-foreground/50" id={`${label}-options`}>Select {label}</p>
       <div className="grid grid-cols-2 gap-2" role="radiogroup" aria-labelledby={`${label}-options`}>
         {options.map((option) => (
           <button
-            key={option}
-            type="button"
-            onClick={() => onChange(option)}
-            role="radio"
-            aria-checked={value === option}
-            className={`border px-3 py-3 font-mono text-xs uppercase transition ${
-              value === option
-                ? "border-primary bg-primary text-primary-foreground shadow-vault-glow"
-                : "border-white/15 bg-white/5 text-foreground hover:border-primary/70 focus-visible:border-primary"
-            }`}
+            key={option} type="button" onClick={() => onChange(option)} role="radio" aria-checked={value === option}
+            className={`border px-3 py-3 font-mono text-xs uppercase transition ${value === option ? "border-primary bg-primary text-primary-foreground shadow-vault-glow" : "border-white/15 bg-white/5 text-foreground hover:border-primary/70 focus-visible:border-primary"}`}
           >
             {option}
           </button>
@@ -946,83 +742,57 @@ function OptionGroup({
   );
 }
 
-function CartDrawer(props: {
-  open: boolean;
-  cart: CartItem[];
-  total: number;
-  stage: OrderStage;
-  details: OrderDetails;
-  orderId: string;
-  setDetails: (details: OrderDetails) => void;
-  onClose: () => void;
-  onStage: (stage: OrderStage) => void;
-  onSubmitDetails: () => void;
+/* ---------- Cart Drawer (simplified — leads to checkout) ---------- */
+function CartDrawer({
+  open, cart, total, onRemove, onClose, onCheckout,
+}: {
+  open: boolean; cart: CartItem[]; total: number;
+  onRemove: (idx: number) => void; onClose: () => void; onCheckout: () => void;
 }) {
-  const {
-    open,
-    cart,
-    total,
-    stage,
-    details,
-    orderId,
-    setDetails,
-    onClose,
-    onStage,
-    onSubmitDetails,
-  } = props;
-  const telegramMessage = useMemo(
-    () =>
-      encodeURIComponent(
-        `JOAT ORDER\nOrder: ${orderId}\nItems:\n${cart
-          .map((item) => `${item.name} / ${item.selectedColor} / ${item.selectedSize}`)
-          .join("\n")}\nTotal: $${total}\nTelegram: ${details.telegram}`,
-      ),
-    [cart, details.telegram, orderId, total],
-  );
-
   return (
     <AnimatePresence>
       {open && (
         <motion.aside
-          initial={{ x: "105%" }}
-          animate={{ x: 0 }}
-          exit={{ x: "105%" }}
+          initial={{ x: "105%" }} animate={{ x: 0 }} exit={{ x: "105%" }}
           transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
           className="fixed right-0 top-0 z-50 flex h-dvh w-full max-w-md flex-col border-l border-white/15 bg-card shadow-2xl"
         >
           <div className="flex items-center justify-between border-b border-white/10 p-4">
             <div>
               <p className="font-display text-3xl uppercase leading-none">Cart</p>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-                Sourcing direct
-              </p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">Sourcing direct</p>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close cart">
-              <X />
-            </Button>
-          </div>
-          <div className="h-1 bg-background">
-            <motion.div
-              initial={{ width: "0%" }}
-              animate={{ width: stage === "pay" ? "100%" : stage === "assigning" ? "72%" : "34%" }}
-              className="h-full bg-white"
-            />
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close cart"><X /></Button>
           </div>
           <div className="flex-1 overflow-y-auto p-4">
-            {stage === "cart" && (
-              <CartList cart={cart} total={total} onSecure={() => onStage("details")} />
-            )}
-            {stage === "details" && (
-              <DetailsForm details={details} setDetails={setDetails} onSubmit={onSubmitDetails} />
-            )}
-            {stage === "assigning" && (
-              <div className="grid h-full place-items-center font-display text-3xl uppercase text-foreground/80">
-                Assigning order id…
+            {cart.length === 0 ? (
+              <p className="font-mono uppercase text-foreground/50">Cart is empty.</p>
+            ) : (
+              <div className="space-y-3">
+                {cart.map((item, index) => (
+                  <div key={`${item.id}-${index}`} className="flex items-center gap-3 border border-white/10 bg-white/[0.02] p-3">
+                    <img src={item.image} alt="" className="h-16 w-16 object-cover" loading="lazy" />
+                    <div className="flex-1 font-mono text-[11px] uppercase">
+                      <p className="text-foreground">{item.name}</p>
+                      <p className="text-foreground/50">{item.selectedColor} · {item.selectedSize}</p>
+                      <p className="mt-1 font-display text-base text-foreground">${item.price}</p>
+                    </div>
+                    <button onClick={() => onRemove(index)} aria-label="Remove" className="text-foreground/50 hover:text-foreground"><X size={16} /></button>
+                  </div>
+                ))}
               </div>
             )}
-            {stage === "pay" && (
-              <PayScreen orderId={orderId} total={total} telegramMessage={telegramMessage} />
-            )}
+          </div>
+          <div className="border-t border-white/10 p-4">
+            <div className="mb-3 flex justify-between font-display text-2xl uppercase">
+              <span>Total</span><span>${total}</span>
+            </div>
+            <button
+              onClick={onCheckout} disabled={cart.length === 0}
+              className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90 disabled:opacity-40"
+            >
+              Checkout
+            </button>
           </div>
         </motion.aside>
       )}
@@ -1030,107 +800,451 @@ function CartDrawer(props: {
   );
 }
 
-function CartList({
-  cart,
-  total,
-  onSecure,
+/* ---------- Multi-step checkout dialog ---------- */
+type CheckoutStep = "contact" | "shipping" | "billing" | "review" | "submitting" | "done";
+
+function CheckoutDialog({
+  open, cart, total, onClose, onComplete,
 }: {
-  cart: CartItem[];
-  total: number;
-  onSecure: () => void;
+  open: boolean; cart: CartItem[]; total: number;
+  onClose: () => void; onComplete: () => void;
 }) {
+  const [step, setStep] = useState<CheckoutStep>("contact");
+  const [data, setData] = useState<CheckoutData>(emptyCheckout);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [orderId, setOrderId] = useState<string>("");
+  const [submitError, setSubmitError] = useState<string>("");
+
+  useEffect(() => {
+    if (open) { setStep("contact"); setErrors({}); setSubmitError(""); }
+  }, [open]);
+
+  const validateStep = (s: CheckoutStep): boolean => {
+    const errs: Record<string, string> = {};
+    if (s === "contact") {
+      if (data.fullName.trim().length < 2) errs.fullName = "Required";
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) errs.email = "Valid email required";
+      if (data.phone.replace(/\D/g, "").length < 7) errs.phone = "Valid phone required";
+    }
+    if (s === "shipping") {
+      (["line1", "city", "region", "postal", "country"] as const).forEach((f) => {
+        if (!data.shipping[f].trim()) errs[`s_${f}`] = "Required";
+      });
+      if (data.shipping.postal.length < 3) errs.s_postal = "Invalid postal";
+    }
+    if (s === "billing" && !data.sameAsBilling) {
+      (["line1", "city", "region", "postal", "country"] as const).forEach((f) => {
+        if (!data.billing[f].trim()) errs[`b_${f}`] = "Required";
+      });
+    }
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const next = () => {
+    if (!validateStep(step)) return;
+    if (step === "contact") setStep("shipping");
+    else if (step === "shipping") setStep("billing");
+    else if (step === "billing") setStep("review");
+  };
+  const back = () => {
+    if (step === "shipping") setStep("contact");
+    else if (step === "billing") setStep("shipping");
+    else if (step === "review") setStep("billing");
+  };
+
+  const submit = async () => {
+    setStep("submitting"); setSubmitError("");
+    const billing = data.sameAsBilling ? data.shipping : data.billing;
+    try {
+      const { data: res, error } = await supabase.functions.invoke("submit-order", {
+        body: {
+          fullName: data.fullName.trim(),
+          email: data.email.trim(),
+          phone: data.phone.trim(),
+          shippingAddress: data.shipping,
+          billingAddress: billing,
+          items: cart.map((c) => ({ id: c.id, name: c.name, brand: c.brand, size: c.selectedSize, color: c.selectedColor, price: c.price })),
+          totalCents: total * 100,
+          notes: data.notes.trim(),
+        },
+      });
+      if (error) throw error;
+      if (!res?.ok) throw new Error(res?.error || "Order failed");
+      setOrderId(res.orderId);
+      setStep("done");
+      onComplete();
+    } catch (e: any) {
+      console.error("checkout submit failed", e);
+      setSubmitError(e?.message || "Could not submit order. Please try again.");
+      setStep("review");
+    }
+  };
+
+  const stepIndex = { contact: 0, shipping: 1, billing: 2, review: 3, submitting: 3, done: 4 }[step];
+
   return (
-    <div className="space-y-4">
-      {cart.length === 0 ? (
-        <p className="font-mono uppercase text-foreground/50">Cart is empty.</p>
-      ) : (
-        cart.map((item, index) => (
-          <div
-            key={`${item.id}-${index}`}
-            className="flex justify-between border-b border-white/10 pb-3 font-mono text-xs uppercase"
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-[60] grid items-end bg-black/85 p-2 sm:place-items-center sm:p-4"
+          role="presentation"
+        >
+          <motion.div
+            initial={{ opacity: 0, y: 30, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.97 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="modal-scrollbar relative flex max-h-[94dvh] w-full max-w-2xl flex-col overflow-y-auto border border-white/15 bg-card shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
+            role="dialog" aria-modal="true" aria-labelledby="checkout-title"
           >
-            <span>
-              {item.name} · {item.selectedColor} · {item.selectedSize}
-            </span>
-            <span>${item.price}</span>
-          </div>
-        ))
+            <header className="sticky top-0 z-10 flex items-center justify-between border-b border-white/10 bg-card/95 p-4 backdrop-blur">
+              <div>
+                <h2 id="checkout-title" className="font-display text-2xl uppercase tracking-wide">Secure Checkout</h2>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">All sales final · Ships in 48h</p>
+              </div>
+              <button onClick={onClose} aria-label="Close checkout" className="grid h-8 w-8 place-items-center bg-white/95 text-black hover:bg-white">
+                <X size={16} />
+              </button>
+            </header>
+
+            <div className="border-b border-white/10 p-4">
+              <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest">
+                {["Contact", "Ship", "Bill", "Review", "Done"].map((label, i) => (
+                  <li key={label} className="flex flex-1 items-center gap-2">
+                    <span className={`grid h-6 w-6 place-items-center border ${i <= stepIndex ? "border-primary bg-primary text-primary-foreground" : "border-white/20 text-foreground/40"}`}>
+                      {i < stepIndex ? <Check size={12} /> : i + 1}
+                    </span>
+                    <span className={i <= stepIndex ? "text-foreground" : "text-foreground/40"}>{label}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="flex-1 p-5">
+              {step === "contact" && (
+                <div className="grid gap-4">
+                  <Field label="Full Name *" value={data.fullName} onChange={(v) => setData({ ...data, fullName: v })} error={errors.fullName} autoComplete="name" />
+                  <Field label="Email *" type="email" value={data.email} onChange={(v) => setData({ ...data, email: v })} error={errors.email} autoComplete="email" />
+                  <Field label="Phone *" type="tel" value={data.phone} onChange={(v) => setData({ ...data, phone: v })} error={errors.phone} autoComplete="tel" />
+                </div>
+              )}
+              {step === "shipping" && (
+                <AddressFields prefix="s_" address={data.shipping} setAddress={(a) => setData({ ...data, shipping: a })} errors={errors} title="Shipping Address" />
+              )}
+              {step === "billing" && (
+                <div className="grid gap-4">
+                  <label className="flex cursor-pointer items-center gap-2 border border-white/15 bg-white/5 p-3 font-mono text-xs uppercase">
+                    <input type="checkbox" checked={data.sameAsBilling} onChange={(e) => setData({ ...data, sameAsBilling: e.target.checked })} className="h-4 w-4 accent-primary" />
+                    Billing same as shipping
+                  </label>
+                  {!data.sameAsBilling && (
+                    <AddressFields prefix="b_" address={data.billing} setAddress={(a) => setData({ ...data, billing: a })} errors={errors} title="Billing Address" />
+                  )}
+                  <div className="grid gap-1 font-mono text-[11px] uppercase text-foreground/60">
+                    Order notes (optional)
+                    <textarea
+                      value={data.notes} onChange={(e) => setData({ ...data, notes: e.target.value.slice(0, 2000) })}
+                      rows={3}
+                      className="border border-white/15 bg-white/5 px-3 py-2 font-mono text-sm text-foreground focus:border-white/40 focus:outline-none"
+                      placeholder="Anything we should know"
+                    />
+                  </div>
+                </div>
+              )}
+              {step === "review" && (
+                <ReviewPanel data={data} cart={cart} total={total} submitError={submitError} />
+              )}
+              {step === "submitting" && (
+                <div className="grid place-items-center gap-3 py-12 font-mono text-xs uppercase text-foreground/70">
+                  <Loader2 className="animate-spin" size={28} />
+                  Securing your order…
+                </div>
+              )}
+              {step === "done" && (
+                <div className="grid place-items-center gap-4 py-10 text-center">
+                  <div className="grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground"><Check size={28} /></div>
+                  <h3 className="font-display text-3xl uppercase">Order Confirmed</h3>
+                  <p className="font-mono text-[11px] uppercase tracking-widest text-foreground/60">ID · {orderId}</p>
+                  <p className="max-w-sm font-body text-sm text-foreground/70">
+                    A fulfillment invoice has been sent to the JOAT team. We'll reach out via email within 24h with tracking & next steps.
+                  </p>
+                  <button onClick={onClose} className="mt-2 bg-white px-8 py-3 font-display text-lg uppercase tracking-widest text-black hover:bg-white/90">
+                    Close
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {step !== "submitting" && step !== "done" && (
+              <footer className="sticky bottom-0 flex items-center justify-between border-t border-white/10 bg-card/95 p-4 backdrop-blur">
+                <button
+                  onClick={back} disabled={step === "contact"}
+                  className="flex items-center gap-1 font-mono text-xs uppercase tracking-widest text-foreground/70 disabled:opacity-30"
+                >
+                  <ChevronLeft size={14} /> Back
+                </button>
+                <p className="font-display text-xl uppercase">${total}</p>
+                {step === "review" ? (
+                  <button onClick={submit} className="flex items-center gap-2 bg-primary px-5 py-3 font-display text-base uppercase tracking-widest text-primary-foreground hover:bg-accent">
+                    Place Order <Check size={16} />
+                  </button>
+                ) : (
+                  <button onClick={next} className="flex items-center gap-2 bg-white px-5 py-3 font-display text-base uppercase tracking-widest text-black hover:bg-white/90">
+                    Next <ChevronRight size={16} />
+                  </button>
+                )}
+              </footer>
+            )}
+          </motion.div>
+        </motion.div>
       )}
-      <div className="flex justify-between font-display text-3xl uppercase">
-        <span>Total</span>
-        <span>${total}</span>
+    </AnimatePresence>
+  );
+}
+
+function Field({
+  label, value, onChange, type = "text", error, autoComplete,
+}: {
+  label: string; value: string; onChange: (v: string) => void;
+  type?: string; error?: string; autoComplete?: string;
+}) {
+  return (
+    <label className="grid gap-1 font-mono text-[11px] uppercase tracking-widest text-foreground/60">
+      {label}
+      <input
+        type={type} value={value} onChange={(e) => onChange(e.target.value.slice(0, 320))}
+        autoComplete={autoComplete} maxLength={320}
+        className={`border bg-white/5 px-3 py-3 font-mono text-sm normal-case text-foreground focus:outline-none ${error ? "border-primary" : "border-white/15 focus:border-white/40"}`}
+      />
+      {error && <span className="text-[10px] text-primary">{error}</span>}
+    </label>
+  );
+}
+
+function AddressFields({
+  prefix, address, setAddress, errors, title,
+}: {
+  prefix: "s_" | "b_"; address: AddressData;
+  setAddress: (a: AddressData) => void;
+  errors: Record<string, string>; title: string;
+}) {
+  const upd = (k: keyof AddressData, v: string) => setAddress({ ...address, [k]: v.slice(0, 200) });
+  return (
+    <div className="grid gap-3">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">{title}</p>
+      <Field label="Address Line 1 *" value={address.line1} onChange={(v) => upd("line1", v)} error={errors[`${prefix}line1`]} autoComplete="address-line1" />
+      <Field label="Address Line 2" value={address.line2} onChange={(v) => upd("line2", v)} autoComplete="address-line2" />
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="City *" value={address.city} onChange={(v) => upd("city", v)} error={errors[`${prefix}city`]} autoComplete="address-level2" />
+        <Field label="State / Region *" value={address.region} onChange={(v) => upd("region", v)} error={errors[`${prefix}region`]} autoComplete="address-level1" />
       </div>
-      <button
-        onClick={onSecure}
-        disabled={cart.length === 0}
-        className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90 disabled:opacity-40"
-      >
-        Checkout
-      </button>
+      <div className="grid grid-cols-2 gap-3">
+        <Field label="Postal Code *" value={address.postal} onChange={(v) => upd("postal", v)} error={errors[`${prefix}postal`]} autoComplete="postal-code" />
+        <Field label="Country *" value={address.country} onChange={(v) => upd("country", v)} error={errors[`${prefix}country`]} autoComplete="country-name" />
+      </div>
     </div>
   );
 }
 
-function DetailsForm({
-  details,
-  setDetails,
-  onSubmit,
-}: {
-  details: OrderDetails;
-  setDetails: (details: OrderDetails) => void;
-  onSubmit: () => void;
-}) {
+function ReviewPanel({
+  data, cart, total, submitError,
+}: { data: CheckoutData; cart: CartItem[]; total: number; submitError: string }) {
+  const billing = data.sameAsBilling ? data.shipping : data.billing;
   return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        onSubmit();
-      }}
-      className="grid gap-4"
-    >
-      {(["name", "address", "telegram"] as const).map((field) => (
-        <label key={field} className="grid gap-1 font-mono text-xs uppercase text-foreground/60">
-          {field}
-          <input
-            required
-            value={details[field]}
-            onChange={(e) => setDetails({ ...details, [field]: e.target.value })}
-            className="border border-white/15 bg-white/5 px-3 py-3 font-mono text-sm text-foreground focus:border-white/40 focus:outline-none"
-          />
-        </label>
-      ))}
-      <button
-        type="submit"
-        className="w-full bg-white py-4 font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90"
-      >
-        Submit
-      </button>
-    </form>
-  );
-}
-
-function PayScreen({
-  orderId,
-  total,
-  telegramMessage,
-}: {
-  orderId: string;
-  total: number;
-  telegramMessage: string;
-}) {
-  return (
-    <div className="grid gap-4 font-mono text-xs uppercase">
-      <p className="font-display text-3xl">Order {orderId}</p>
-      <p>Total: ${total}</p>
-      <p className="text-foreground/60">
-        Send confirmation via Telegram to finalize your drop.
+    <div className="grid gap-5 font-mono text-xs">
+      {submitError && (
+        <div className="border border-primary bg-primary/10 p-3 text-[11px] uppercase text-primary">{submitError}</div>
+      )}
+      <section>
+        <h4 className="mb-2 font-display text-lg uppercase tracking-wide">Items</h4>
+        <ul className="grid gap-2">
+          {cart.map((c, i) => (
+            <li key={i} className="flex items-center justify-between border-b border-white/10 py-2">
+              <span className="uppercase text-foreground/80">{c.name} · {c.selectedColor} · {c.selectedSize}</span>
+              <span className="text-foreground">${c.price}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 flex justify-between font-display text-2xl uppercase"><span>Total</span><span>${total}</span></p>
+      </section>
+      <section className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <h4 className="mb-1 font-display text-base uppercase">Contact</h4>
+          <p className="text-foreground/80">{data.fullName}</p>
+          <p className="text-foreground/60 normal-case">{data.email}</p>
+          <p className="text-foreground/60">{data.phone}</p>
+        </div>
+        <div>
+          <h4 className="mb-1 font-display text-base uppercase">Ship To</h4>
+          <AddressLine a={data.shipping} />
+        </div>
+        <div>
+          <h4 className="mb-1 font-display text-base uppercase">Bill To</h4>
+          <AddressLine a={billing} />
+        </div>
+        {data.notes && (
+          <div>
+            <h4 className="mb-1 font-display text-base uppercase">Notes</h4>
+            <p className="normal-case text-foreground/70">{data.notes}</p>
+          </div>
+        )}
+      </section>
+      <p className="border-t border-white/10 pt-3 text-[10px] uppercase tracking-widest text-foreground/50">
+        By placing this order you reaffirm: all sales final, no refunds, returns, or exchanges.
       </p>
-      <a
-        href={`https://t.me/joatz?text=${telegramMessage}`}
-        className="block w-full bg-white py-4 text-center font-display text-xl uppercase tracking-widest text-black transition hover:bg-white/90"
-      >
-        Open Telegram
-      </a>
     </div>
+  );
+}
+
+function AddressLine({ a }: { a: AddressData }) {
+  return (
+    <p className="normal-case text-foreground/80">
+      {a.line1}{a.line2 ? `, ${a.line2}` : ""}<br />
+      {a.city}, {a.region} {a.postal}<br />
+      {a.country}
+    </p>
+  );
+}
+
+/* ---------- Terms of Service modal ---------- */
+function TosModal({
+  open, onAccept, dismissible, onDismiss,
+}: { open: boolean; onAccept: () => void; dismissible: boolean; onDismiss: () => void }) {
+  return (
+    <AnimatePresence>
+      {open && (
+        <motion.div
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 z-[70] grid place-items-center bg-black/90 p-4"
+          role="dialog" aria-modal="true" aria-labelledby="tos-title"
+        >
+          <motion.div
+            initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="relative w-full max-w-md border border-white/15 bg-card p-6 shadow-[0_20px_80px_-20px_rgba(255,40,60,0.55)]"
+          >
+            <div className="mb-3 flex items-center gap-2">
+              <span className="grid h-8 w-8 place-items-center bg-primary text-primary-foreground"><Shield size={16} /></span>
+              <h2 id="tos-title" className="font-display text-2xl uppercase tracking-wide">Terms of Service</h2>
+            </div>
+            <div className="space-y-3 font-body text-sm text-foreground/80">
+              <p>By proceeding, you agree to our Terms of Service.</p>
+              <p className="font-display text-xl uppercase tracking-widest text-primary">All sales are 100% final.</p>
+              <p>No refunds, returns, or exchanges. Items are sourced direct and authenticated. Orders ship within 48 hours of confirmation.</p>
+            </div>
+            <div className="mt-5 grid gap-2">
+              <button onClick={onAccept} className="w-full bg-white py-3 font-display text-lg uppercase tracking-widest text-black transition hover:bg-white/90">
+                I Agree
+              </button>
+              {dismissible && (
+                <button onClick={onDismiss} className="font-mono text-[10px] uppercase tracking-widest text-foreground/40 hover:text-foreground/70">
+                  Close
+                </button>
+              )}
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+/* ---------- MASK chat widget ---------- */
+type MaskMessage = { role: "user" | "assistant"; content: string };
+
+function MaskWidget() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<MaskMessage[]>([
+    { role: "assistant", content: "Welcome to J.O.A.T. I'm MASK — ask about shipping, sizing, TOS, or any drop." },
+  ]);
+  const [input, setInput] = useState("");
+  const [sending, setSending] = useState(false);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages, open]);
+
+  const send = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+    if (text.length > 1500) return;
+    const next: MaskMessage[] = [...messages, { role: "user", content: text }];
+    setMessages(next);
+    setInput("");
+    setSending(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("mask-chat", { body: { messages: next } });
+      if (error) throw error;
+      const reply = String(data?.reply ?? "I am MASK. I can only assist with store-related inquiries. How can I help you shop today?");
+      setMessages((m) => [...m, { role: "assistant", content: reply }]);
+    } catch {
+      setMessages((m) => [...m, { role: "assistant", content: "I'd love to help further — please email GQHarris10202011@gmail.com or DM @joatz on Telegram." }]);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_40px_-10px_rgba(255,40,60,0.7)] transition hover:scale-105 active:scale-95"
+        aria-label="Open MASK support chat" aria-expanded={open}
+      >
+        {open ? <X size={22} /> : <MessageCircle size={22} />}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.95 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed bottom-24 right-5 z-40 flex h-[min(75dvh,520px)] w-[calc(100vw-2.5rem)] max-w-[360px] flex-col overflow-hidden border border-white/15 bg-card shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
+            role="dialog" aria-label="MASK Support Chat"
+          >
+            <div className="flex items-center gap-2 border-b border-white/10 bg-black/40 p-3">
+              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-primary-foreground"><MessageCircle size={16} /></span>
+              <div>
+                <p className="font-display text-lg uppercase leading-none">MASK · Support</p>
+                <p className="font-mono text-[9px] uppercase tracking-widest text-foreground/50">Online · J.O.A.T</p>
+              </div>
+            </div>
+            <div ref={scrollRef} className="modal-scrollbar flex-1 space-y-3 overflow-y-auto p-3 font-body text-sm">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[82%] whitespace-pre-wrap px-3 py-2 ${m.role === "user" ? "bg-white text-black" : "border border-white/10 bg-white/5 text-foreground"}`}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {sending && (
+                <div className="flex justify-start">
+                  <div className="border border-white/10 bg-white/5 px-3 py-2 text-foreground/60">
+                    <Loader2 className="inline animate-spin" size={14} /> typing…
+                  </div>
+                </div>
+              )}
+            </div>
+            <form
+              onSubmit={(e) => { e.preventDefault(); send(); }}
+              className="flex items-center gap-2 border-t border-white/10 bg-black/40 p-2"
+            >
+              <input
+                value={input} onChange={(e) => setInput(e.target.value.slice(0, 1500))}
+                placeholder="Ask MASK…" maxLength={1500}
+                className="flex-1 border border-white/15 bg-white/5 px-3 py-2 font-mono text-sm text-foreground focus:border-white/40 focus:outline-none"
+                aria-label="Message MASK"
+              />
+              <button type="submit" disabled={!input.trim() || sending} className="grid h-9 w-9 place-items-center bg-primary text-primary-foreground disabled:opacity-40" aria-label="Send">
+                <Send size={16} />
+              </button>
+            </form>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }
