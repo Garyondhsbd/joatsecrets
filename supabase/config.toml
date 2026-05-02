@@ -1,1 +1,7 @@
 project_id = "hofurxhbkxwoylunzkyu"
+
+[functions.mask-chat]
+verify_jwt = false
+
+[functions.submit-order]
+verify_jwt = false
