@@ -56,7 +56,7 @@ const emptyCheckout: CheckoutData = {
 
 const productSections = [
   "Bape Tees", "Sp5der Hoodies", "Denim Tears", "Chrome Hearts",
-  "Essentials Shorts", "Hellstar Tees", "Fragrance",
+  "Essentials Shorts", "Hellstar Tees", "Alo", "Fragrance",
 ] as const;
 
 const readProductOptionMemory = (productId: string) => {
