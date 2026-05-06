@@ -8,6 +8,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import products from "@/data/products.json";
+import jokerCard from "@/assets/joker-card.png";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/")({
