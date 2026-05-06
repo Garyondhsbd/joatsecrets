@@ -740,5 +740,23 @@
       "100ml"
     ],
     "image": "/products/actual/lv-imagination.jpg"
+  },
+  {
+    "id": "AL-001",
+    "brand": "ALO",
+    "category": "Alo",
+    "name": "Alo Black Quarter Zip",
+    "price": 90,
+    "stock": 8,
+    "colors": [
+      "Black"
+    ],
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "image": "/products/added/alo-black-quarter-zip.webp"
   }
 ]
