@@ -284,6 +284,26 @@ function VaultHub({
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }}
       className="relative z-10 min-h-screen"
     >
+      {/* Floating laughing jesters */}
+      <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+        {[
+          { top: "12%", left: "3%",  delay: 0,   rot: -10, size: "text-4xl sm:text-6xl" },
+          { top: "28%", left: "92%", delay: 0.5, rot: 14,  size: "text-3xl sm:text-5xl" },
+          { top: "55%", left: "2%",  delay: 1.0, rot: 8,   size: "text-4xl sm:text-6xl" },
+          { top: "78%", left: "90%", delay: 1.5, rot: -12, size: "text-4xl sm:text-5xl" },
+        ].map((j, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20, rotate: j.rot }}
+            animate={{ opacity: 0.5, y: [0, -12, 0], rotate: [j.rot, j.rot + 6, j.rot] }}
+            transition={{ delay: j.delay, duration: 5 + i, repeat: Infinity, ease: "easeInOut" }}
+            className={`absolute ${j.size} drop-shadow-[0_0_18px_rgba(200,16,46,0.55)]`}
+            style={{ top: j.top, left: j.left }}
+          >
+            🤡
+          </motion.div>
+        ))}
+      </div>
       <VaultHeader
         cartCount={cart.length} openCart={openCart}
         query={query} setQuery={setQuery}
