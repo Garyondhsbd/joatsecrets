@@ -211,25 +211,24 @@ function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
       transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
       className="relative z-10 grid min-h-screen place-items-center px-5"
     >
-      {/* Floating laughing jesters */}
+      {/* Floating joker cards */}
       <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
         {[
-          { top: "8%",  left: "6%",  delay: 0, rot: -12, size: "text-5xl sm:text-6xl" },
-          { top: "14%", left: "82%", delay: 0.4, rot: 14, size: "text-4xl sm:text-6xl" },
-          { top: "68%", left: "4%",  delay: 0.8, rot: 8,  size: "text-5xl sm:text-7xl" },
-          { top: "74%", left: "84%", delay: 1.2, rot: -10, size: "text-4xl sm:text-6xl" },
-          { top: "42%", left: "90%", delay: 0.6, rot: 20, size: "text-3xl sm:text-5xl" },
+          { top: "6%",  left: "4%",  delay: 0,   rot: -12, w: "w-24 sm:w-36" },
+          { top: "10%", left: "78%", delay: 0.4, rot: 14,  w: "w-20 sm:w-32" },
+          { top: "66%", left: "2%",  delay: 0.8, rot: 8,   w: "w-28 sm:w-40" },
+          { top: "72%", left: "80%", delay: 1.2, rot: -10, w: "w-24 sm:w-36" },
         ].map((j, i) => (
-          <motion.div
+          <motion.img
             key={i}
+            src={jokerCard}
+            alt=""
             initial={{ opacity: 0, y: 20, rotate: j.rot }}
-            animate={{ opacity: 0.85, y: [0, -10, 0], rotate: [j.rot, j.rot + 6, j.rot] }}
-            transition={{ delay: j.delay, duration: 4 + i, repeat: Infinity, ease: "easeInOut" }}
-            className={`absolute ${j.size} drop-shadow-[0_0_18px_rgba(200,16,46,0.55)]`}
+            animate={{ opacity: 0.85, y: [0, -10, 0], rotate: [j.rot, j.rot + 4, j.rot] }}
+            transition={{ delay: j.delay, duration: 5 + i, repeat: Infinity, ease: "easeInOut" }}
+            className={`absolute ${j.w} drop-shadow-[0_0_24px_rgba(200,16,46,0.55)]`}
             style={{ top: j.top, left: j.left }}
-          >
-            🤡
-          </motion.div>
+          />
         ))}
       </div>
       <motion.div
