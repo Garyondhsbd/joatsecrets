@@ -1414,7 +1414,7 @@ function MaskWidget() {
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }} transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed bottom-24 right-5 z-40 flex h-[min(75dvh,520px)] w-[calc(100vw-2.5rem)] max-w-[360px] flex-col overflow-hidden border border-white/15 bg-card shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
+            className="fixed bottom-44 right-5 z-40 flex h-[min(70dvh,520px)] w-[calc(100vw-2.5rem)] max-w-[360px] flex-col overflow-hidden rounded-2xl border border-white/15 bg-card shadow-[0_20px_80px_-20px_rgba(255,40,60,0.5)]"
             role="dialog" aria-label="MASK Support Chat"
           >
             <div className="flex items-center gap-2 border-b border-white/10 bg-black/40 p-3">
