@@ -304,14 +304,13 @@ function VaultHub({
           />
         ))}
       </div>
-      <VaultHeader
-        cartCount={cart.length} openCart={openCart}
-        query={query} setQuery={setQuery}
-        activeCategory={activeCategory} setActiveCategory={setActiveCategory}
-      />
+      <MinimalTopBar />
       <BackgroundMusic />
 
-      <section className="relative pt-8">
+      <section className="relative pb-32 pt-6">
+        {!query.trim() && activeCategory === "All" && (
+          <BentoHero onOpenProduct={openProductDetail} onJump={(c) => setActiveCategory(c)} />
+        )}
         {query.trim() ? (
           <CatalogueGrid title={`Search · "${query}"`} count={filtered.length} items={filtered} onOpen={openProductDetail} />
         ) : (
@@ -330,10 +329,171 @@ function VaultHub({
         )}
       </section>
 
-      <footer className="relative border-t border-white/10 py-10 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-vault-quiet">
+      <FloatingDock
+        cartCount={cart.length} openCart={openCart}
+        activeCategory={activeCategory} setActiveCategory={setActiveCategory}
+        query={query} setQuery={setQuery}
+      />
+
+      <footer className="relative pb-28 pt-6 text-center font-mono text-[10px] uppercase tracking-[0.3em] text-vault-quiet">
         J.O.A.T · Source Vault · Telegram @joatz
       </footer>
     </motion.section>
+  );
+}
+
+function MinimalTopBar() {
+  return (
+    <header className="relative z-20 flex items-center justify-center px-5 pt-6">
+      <a href="/" className="font-display text-3xl uppercase leading-none tracking-wider text-foreground sm:text-4xl">J.O.A.T</a>
+    </header>
+  );
+}
+
+function BentoHero({
+  onOpenProduct, onJump,
+}: { onOpenProduct: (p: Product) => void; onJump: (c: string) => void }) {
+  const hero = useMemo(() => products.find((p) => p.category === "Hellstar Tees") ?? products[0], []);
+  const cells = useMemo(() => {
+    const pick = (cat: string) => products.find((p) => p.category === cat);
+    return [
+      { label: "Essentials", cat: "Essentials Shorts", product: pick("Essentials Shorts") },
+      { label: "Bape", cat: "Bape Tees", product: pick("Bape Tees") },
+      { label: "Sp5der", cat: "Sp5der Hoodies", product: pick("Sp5der Hoodies") },
+      { label: "Hellstar", cat: "Hellstar Tees", product: pick("Hellstar Tees") },
+    ];
+  }, []);
+
+  return (
+    <section className="relative mx-auto max-w-7xl px-3 pb-10 pt-4 sm:px-5">
+      <motion.div
+        initial="hidden" animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } } }}
+        className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4"
+      >
+        <motion.button
+          variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          onClick={() => hero && onOpenProduct(hero)}
+          className="bento-cell haptic group relative col-span-2 row-span-2 flex aspect-[16/11] flex-col justify-end p-5 text-left sm:aspect-auto sm:min-h-[440px]"
+        >
+          {hero && (
+            <img src={hero.image} alt={hero.name}
+              className="absolute inset-0 h-full w-full object-cover opacity-65 transition-transform duration-700 group-hover:scale-105"
+            />
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
+          <div className="relative">
+            <p className="font-mono text-[10px] uppercase tracking-[0.4em] text-vault-wire">Hottest Drop</p>
+            <h2 className="mt-2 font-display text-5xl uppercase leading-none text-foreground sm:text-7xl">{hero?.name}</h2>
+            <p className="mt-2 font-mono text-xs uppercase tracking-widest text-foreground/70">{hero?.brand} · ${hero?.price}</p>
+          </div>
+        </motion.button>
+
+        {cells.map((cell) => (
+          <motion.button
+            key={cell.label}
+            variants={{ hidden: { opacity: 0, y: 30 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+            onClick={() => onJump(cell.cat)}
+            className="bento-cell haptic group relative flex aspect-square flex-col justify-end p-3 text-left"
+          >
+            {cell.product && (
+              <img src={cell.product.image} alt={cell.label}
+                className="absolute inset-0 h-full w-full object-cover opacity-55 transition-transform duration-700 group-hover:scale-110"
+              />
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+            <div className="relative">
+              <p className="font-mono text-[9px] uppercase tracking-[0.3em] text-vault-wire">Shop</p>
+              <p className="font-display text-2xl uppercase leading-none text-foreground sm:text-3xl">{cell.label}</p>
+            </div>
+          </motion.button>
+        ))}
+      </motion.div>
+    </section>
+  );
+}
+
+function FloatingDock({
+  cartCount, openCart, activeCategory, setActiveCategory, query, setQuery,
+}: {
+  cartCount: number; openCart: () => void;
+  activeCategory: string; setActiveCategory: (c: string) => void;
+  query: string; setQuery: (q: string) => void;
+}) {
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
+  const categories = ["All", ...productSections];
+
+  return (
+    <>
+      <AnimatePresence>
+        {navOpen && (
+          <motion.div
+            key="nav"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-dock fixed bottom-24 left-1/2 z-40 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl p-3"
+          >
+            <div className="flex flex-wrap gap-2">
+              {categories.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => { setActiveCategory(c); setNavOpen(false); }}
+                  className={`haptic rounded-full px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.2em] ${activeCategory === c ? "bg-white text-black" : "bg-white/5 text-foreground/70 hover:bg-white/10"}`}
+                >{c}</button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+        {searchOpen && (
+          <motion.div
+            key="search"
+            initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20, scale: 0.95 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            className="glass-dock fixed bottom-24 left-1/2 z-40 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl p-3"
+          >
+            <div className="relative">
+              <Search size={14} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
+              <input
+                autoFocus value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search drops…"
+                className="w-full rounded-full border border-white/15 bg-white/5 py-2.5 pl-9 pr-3 font-mono text-xs text-foreground placeholder:text-foreground/40 focus:border-white/40 focus:outline-none"
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <nav className="glass-dock fixed bottom-4 left-1/2 z-40 flex -translate-x-1/2 items-center gap-1 rounded-full px-2 py-2 sm:gap-2">
+        <button onClick={() => { setActiveCategory("All"); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="haptic grid h-11 w-11 place-items-center rounded-full text-foreground hover:bg-white/10" aria-label="Home">
+          <span className="font-display text-lg leading-none">J</span>
+        </button>
+        <button
+          onClick={() => { setNavOpen((v) => !v); setSearchOpen(false); }}
+          className={`haptic grid h-11 w-11 place-items-center rounded-full hover:bg-white/10 ${navOpen ? "bg-white text-black" : "text-foreground"}`}
+          aria-label="Categories"
+        >
+          <Menu size={18} />
+        </button>
+        <button
+          onClick={() => { setSearchOpen((v) => !v); setNavOpen(false); }}
+          className={`haptic grid h-11 w-11 place-items-center rounded-full hover:bg-white/10 ${searchOpen ? "bg-white text-black" : "text-foreground"}`}
+          aria-label="Search"
+        >
+          <Search size={18} />
+        </button>
+        <a href="https://t.me/joatz" className="haptic grid h-11 w-11 place-items-center rounded-full text-foreground hover:bg-white/10" aria-label="Telegram">
+          <Send size={18} />
+        </a>
+        <button onClick={openCart} className="haptic relative grid h-11 w-11 place-items-center rounded-full text-foreground hover:bg-white/10" aria-label="Cart">
+          <ShoppingBag size={18} />
+          {cartCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-primary px-1 font-mono text-[9px] text-primary-foreground">{cartCount}</span>
+          )}
+        </button>
+      </nav>
+    </>
   );
 }
 
