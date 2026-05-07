@@ -710,7 +710,7 @@ function BackgroundMusic() {
   return (
     <button
       type="button" onClick={toggle}
-      className="group fixed bottom-5 left-5 z-30 flex items-center gap-3 border border-white/15 bg-black/70 px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white shadow-2xl backdrop-blur-md transition hover:border-white/40"
+      className="group glass-dock haptic fixed right-5 top-5 z-30 flex items-center gap-3 rounded-full px-3 py-2 font-mono text-[10px] uppercase tracking-widest text-white"
       aria-label={playing ? "Pause music" : "Play music"} aria-pressed={playing} disabled={starting}
     >
       <span className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full">
