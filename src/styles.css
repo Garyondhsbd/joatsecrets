@@ -561,6 +561,99 @@
       vault-marquee 9s linear infinite,
       stock-flash 680ms steps(2, end) infinite;
   }
+
+  /* === Cinematic Streetwear Vault === */
+  .glass-dock {
+    background: color-mix(in oklab, var(--background) 35%, transparent);
+    backdrop-filter: blur(22px) saturate(160%);
+    -webkit-backdrop-filter: blur(22px) saturate(160%);
+    border: 1px solid color-mix(in oklab, var(--foreground) 14%, transparent);
+    box-shadow:
+      0 18px 60px -18px rgba(0, 0, 0, 0.85),
+      0 0 0 1px color-mix(in oklab, var(--vault-crimson) 22%, transparent),
+      inset 0 1px 0 color-mix(in oklab, var(--foreground) 18%, transparent);
+  }
+
+  .haptic {
+    transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 200ms ease, background-color 180ms ease;
+  }
+  .haptic:active { transform: scale(0.94); }
+
+  .product-glow {
+    background:
+      radial-gradient(ellipse at 50% 38%, color-mix(in oklab, var(--vault-crimson) 38%, transparent), transparent 62%),
+      radial-gradient(ellipse at 50% 80%, color-mix(in oklab, var(--vault-joker-purple) 32%, transparent), transparent 70%),
+      linear-gradient(180deg, oklch(0.05 0.02 20), oklch(0.02 0.01 20));
+  }
+
+  .bento-cell {
+    position: relative;
+    overflow: hidden;
+    border: 1px solid color-mix(in oklab, var(--foreground) 12%, transparent);
+    background:
+      radial-gradient(circle at 30% 20%, color-mix(in oklab, var(--vault-crimson) 22%, transparent), transparent 55%),
+      radial-gradient(circle at 80% 80%, color-mix(in oklab, var(--vault-joker-purple) 26%, transparent), transparent 60%),
+      linear-gradient(160deg, oklch(0.09 0.04 20), oklch(0.04 0.02 20));
+    box-shadow:
+      0 24px 60px -22px rgba(0, 0, 0, 0.9),
+      inset 0 1px 0 color-mix(in oklab, var(--foreground) 10%, transparent);
+  }
+  .bento-cell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(115deg, transparent 30%, color-mix(in oklab, var(--foreground) 8%, transparent) 50%, transparent 70%);
+    opacity: 0;
+    transition: opacity 400ms ease;
+    pointer-events: none;
+  }
+  .bento-cell:hover::after { opacity: 1; }
+
+  .mask-orb {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background:
+      radial-gradient(circle at 35% 30%, oklch(0.95 0.05 20) 0 8%, transparent 12%),
+      radial-gradient(circle at 50% 50%, var(--vault-wire), var(--vault-crimson) 55%, var(--vault-joker-purple) 100%);
+    box-shadow:
+      0 0 0 1px color-mix(in oklab, var(--foreground) 25%, transparent),
+      0 0 28px color-mix(in oklab, var(--vault-crimson) 70%, transparent),
+      0 0 70px color-mix(in oklab, var(--vault-joker-purple) 55%, transparent);
+    animation: orb-pulse 3.2s ease-in-out infinite, orb-float 5s ease-in-out infinite;
+  }
+  .mask-orb::before {
+    content: "";
+    position: absolute;
+    inset: -6px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in oklab, var(--vault-crimson) 50%, transparent);
+    animation: orb-ring 3.2s ease-out infinite;
+  }
+
+  @keyframes orb-pulse {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.25) saturate(1.2); }
+  }
+  @keyframes orb-float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+  }
+  @keyframes orb-ring {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  .reveal-up {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 700ms cubic-bezier(0.16, 1, 0.3, 1), transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .reveal-up.is-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @keyframes vault-drift {
