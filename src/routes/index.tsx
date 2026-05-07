@@ -1395,10 +1395,18 @@ function MaskWidget() {
     <>
       <button
         onClick={() => setOpen((v) => !v)}
-        className="fixed bottom-5 right-5 z-40 grid h-14 w-14 place-items-center rounded-full bg-primary text-primary-foreground shadow-[0_10px_40px_-10px_rgba(255,40,60,0.7)] transition hover:scale-105 active:scale-95"
+        className="haptic fixed bottom-24 right-5 z-40 grid place-items-center rounded-full"
         aria-label="Open MASK support chat" aria-expanded={open}
       >
-        {open ? <X size={22} /> : <MessageCircle size={22} />}
+        {open ? (
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-card text-foreground shadow-[0_10px_40px_-10px_rgba(255,40,60,0.7)]">
+            <X size={22} />
+          </span>
+        ) : (
+          <span className="mask-orb grid place-items-center">
+            <span className="font-display text-xs uppercase tracking-widest text-white/95">Mask</span>
+          </span>
+        )}
       </button>
 
       <AnimatePresence>
