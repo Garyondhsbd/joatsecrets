@@ -726,7 +726,7 @@ function BackgroundMusic() {
 }
 
 /* ---------- Product card with 3D tilt + scroll fade ---------- */
-function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: Product) => void }) {
+function ProductCard({ product, onOpen, index = 0 }: { product: Product; onOpen: (product: Product) => void; index?: number }) {
   const ref = useRef<HTMLButtonElement | null>(null);
   const [shown, setShown] = useState(false);
 
@@ -753,20 +753,23 @@ function ProductCard({ product, onOpen }: { product: Product; onOpen: (product: 
     el.style.setProperty("--ry", `0deg`);
   };
 
+  const stagger = Math.min(index, 7) * 70;
+
   return (
     <button
       type="button" ref={ref}
       onMouseMove={handleMove} onMouseLeave={handleLeave}
-      className={`tilt-card crimson-hover group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-left text-foreground shadow-lg ${shown ? "translate-y-0 opacity-100" : "translate-y-6 opacity-0"} transition-[opacity,transform] duration-700 ease-out`}
+      style={{ transitionDelay: shown ? `${stagger}ms` : "0ms" }}
+      className={`tilt-card crimson-hover haptic group relative flex cursor-pointer flex-col overflow-hidden border border-white/10 bg-card text-left text-foreground shadow-[0_18px_50px_-18px_rgba(0,0,0,0.9)] ${shown ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"} transition-[opacity,transform] duration-700 ease-out`}
       onClick={() => onOpen(product)}
       aria-label={`View ${product.name}, ${product.brand}, $${product.price}`}
     >
-      <div className="product-card-media relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-white/[0.04] to-black/40">
+      <div className="product-card-media product-glow relative aspect-[4/5] overflow-hidden">
         <img
           src={product.image} alt={product.name} loading="lazy" decoding="async"
           className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 ease-out"
         />
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
         <div className="absolute left-2 top-2 bg-white/95 px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest text-black">
           {product.brand}
         </div>
