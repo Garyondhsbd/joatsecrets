@@ -128,6 +128,7 @@ function Index() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <SpaceBackdrop />
+      <CinematicThunder />
       <AnimatePresence mode="wait">
         {!unlocked ? (
           <RestrictedGateway key="gate" onUnlock={() => setUnlocked(true)} />
