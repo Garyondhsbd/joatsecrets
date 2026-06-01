@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send,
   MessageCircle, Loader2, Check, ChevronRight, ChevronLeft,
+  CreditCard, Smartphone, DollarSign,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
@@ -34,6 +35,7 @@ interface AddressData {
   postal: string;
   country: string;
 }
+type PaymentMethod = "card" | "apple_pay" | "cash_app";
 interface CheckoutData {
   fullName: string;
   email: string;
@@ -42,6 +44,12 @@ interface CheckoutData {
   billing: AddressData;
   sameAsBilling: boolean;
   notes: string;
+  paymentMethod: PaymentMethod;
+  cardNumber: string;
+  cardExp: string;
+  cardCvc: string;
+  cardName: string;
+  cashTag: string;
 }
 
 const ACCESS_KEY = "joat-vault-access-2026";
@@ -53,6 +61,9 @@ const emptyCheckout: CheckoutData = {
   fullName: "", email: "", phone: "",
   shipping: { ...emptyAddress }, billing: { ...emptyAddress },
   sameAsBilling: true, notes: "",
+  paymentMethod: "card",
+  cardNumber: "", cardExp: "", cardCvc: "", cardName: "",
+  cashTag: "",
 };
 
 const productSections = [
@@ -1005,7 +1016,7 @@ function CartDrawer({
 }
 
 /* ---------- Multi-step checkout dialog ---------- */
-type CheckoutStep = "contact" | "shipping" | "billing" | "review" | "submitting" | "done";
+type CheckoutStep = "contact" | "shipping" | "billing" | "payment" | "review" | "submitting" | "done";
 
 function CheckoutDialog({
   open, cart, total, onClose, onComplete,
@@ -1041,6 +1052,18 @@ function CheckoutDialog({
         if (!data.billing[f].trim()) errs[`b_${f}`] = "Required";
       });
     }
+    if (s === "payment") {
+      if (data.paymentMethod === "card") {
+        const digits = data.cardNumber.replace(/\D/g, "");
+        if (digits.length < 13 || digits.length > 19) errs.cardNumber = "Valid card number required";
+        if (!/^\d{2}\s*\/\s*\d{2}$/.test(data.cardExp.trim())) errs.cardExp = "MM/YY";
+        if (!/^\d{3,4}$/.test(data.cardCvc.trim())) errs.cardCvc = "CVC";
+        if (data.cardName.trim().length < 2) errs.cardName = "Name on card";
+      }
+      if (data.paymentMethod === "cash_app") {
+        if (!/^\$?[A-Za-z][A-Za-z0-9_]{1,19}$/.test(data.cashTag.trim())) errs.cashTag = "Valid $Cashtag required";
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -1049,17 +1072,25 @@ function CheckoutDialog({
     if (!validateStep(step)) return;
     if (step === "contact") setStep("shipping");
     else if (step === "shipping") setStep("billing");
-    else if (step === "billing") setStep("review");
+    else if (step === "billing") setStep("payment");
+    else if (step === "payment") setStep("review");
   };
   const back = () => {
     if (step === "shipping") setStep("contact");
     else if (step === "billing") setStep("shipping");
-    else if (step === "review") setStep("billing");
+    else if (step === "payment") setStep("billing");
+    else if (step === "review") setStep("payment");
   };
 
   const submit = async () => {
     setStep("submitting"); setSubmitError("");
     const billing = data.sameAsBilling ? data.shipping : data.billing;
+    const paymentLabel = data.paymentMethod === "card"
+      ? `Card ending ${data.cardNumber.replace(/\D/g, "").slice(-4)} (${data.cardName.trim()}, exp ${data.cardExp.trim()})`
+      : data.paymentMethod === "apple_pay"
+        ? "Apple Pay"
+        : `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`;
+    const notesWithPayment = `[Payment: ${paymentLabel}]${data.notes.trim() ? "\n" + data.notes.trim() : ""}`;
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-order", {
         body: {
@@ -1070,7 +1101,7 @@ function CheckoutDialog({
           billingAddress: billing,
           items: cart.map((c) => ({ id: c.id, name: c.name, brand: c.brand, size: c.selectedSize, color: c.selectedColor, price: c.price })),
           totalCents: total * 100,
-          notes: data.notes.trim(),
+          notes: notesWithPayment,
         },
       });
       if (error) throw error;
@@ -1085,7 +1116,7 @@ function CheckoutDialog({
     }
   };
 
-  const stepIndex = { contact: 0, shipping: 1, billing: 2, review: 3, submitting: 3, done: 4 }[step];
+  const stepIndex: number = { contact: 0, shipping: 1, billing: 2, payment: 3, review: 4, submitting: 4, done: 5 }[step];
 
   return (
     <AnimatePresence>
@@ -1114,7 +1145,7 @@ function CheckoutDialog({
 
             <div className="border-b border-white/10 p-4">
               <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest">
-                {["Contact", "Ship", "Bill", "Review", "Done"].map((label, i) => (
+                {["Contact", "Ship", "Bill", "Pay", "Review", "Done"].map((label, i) => (
                   <li key={label} className="flex flex-1 items-center gap-2">
                     <span className={`grid h-6 w-6 place-items-center border ${i <= stepIndex ? "border-primary bg-primary text-primary-foreground" : "border-white/20 text-foreground/40"}`}>
                       {i < stepIndex ? <Check size={12} /> : i + 1}
@@ -1155,6 +1186,9 @@ function CheckoutDialog({
                     />
                   </div>
                 </div>
+              )}
+              {step === "payment" && (
+                <PaymentPanel data={data} setData={setData} errors={errors} />
               )}
               {step === "review" && (
                 <ReviewPanel data={data} cart={cart} total={total} submitError={submitError} />
@@ -1287,6 +1321,14 @@ function ReviewPanel({
           <h4 className="mb-1 font-display text-base uppercase">Bill To</h4>
           <AddressLine a={billing} />
         </div>
+        <div className="sm:col-span-2">
+          <h4 className="mb-1 font-display text-base uppercase">Payment</h4>
+          <p className="normal-case text-foreground/80">
+            {data.paymentMethod === "card" && `Card ending •••• ${data.cardNumber.replace(/\D/g, "").slice(-4) || "----"}`}
+            {data.paymentMethod === "apple_pay" && "Apple Pay"}
+            {data.paymentMethod === "cash_app" && `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`}
+          </p>
+        </div>
         {data.notes && (
           <div>
             <h4 className="mb-1 font-display text-base uppercase">Notes</h4>
@@ -1308,6 +1350,118 @@ function AddressLine({ a }: { a: AddressData }) {
       {a.city}, {a.region} {a.postal}<br />
       {a.country}
     </p>
+  );
+}
+
+/* ---------- Payment method selection ---------- */
+function PaymentPanel({
+  data, setData, errors,
+}: {
+  data: CheckoutData;
+  setData: (d: CheckoutData) => void;
+  errors: Record<string, string>;
+}) {
+  const methods: Array<{ id: PaymentMethod; label: string; sub: string; Icon: typeof CreditCard }> = [
+    { id: "card", label: "Credit / Debit Card", sub: "Visa · Mastercard · Amex", Icon: CreditCard },
+    { id: "apple_pay", label: "Apple Pay", sub: "Touch / Face ID on supported devices", Icon: Smartphone },
+    { id: "cash_app", label: "Cash App", sub: "Pay with your $Cashtag", Icon: DollarSign },
+  ];
+  const formatCardNumber = (v: string) =>
+    v.replace(/\D/g, "").slice(0, 19).replace(/(.{4})/g, "$1 ").trim();
+  const formatExp = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 4);
+    return d.length <= 2 ? d : `${d.slice(0, 2)}/${d.slice(2)}`;
+  };
+
+  return (
+    <div className="grid gap-4">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">Payment Method</p>
+      <div className="grid gap-2">
+        {methods.map(({ id, label, sub, Icon }) => {
+          const active = data.paymentMethod === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setData({ ...data, paymentMethod: id })}
+              className={`flex items-center gap-3 border p-3 text-left transition ${
+                active ? "border-primary bg-primary/10 shadow-[0_0_20px_-8px_rgba(255,40,60,0.6)]" : "border-white/15 bg-white/5 hover:border-white/30"
+              }`}
+            >
+              <span className={`grid h-10 w-10 place-items-center border ${active ? "border-primary text-primary" : "border-white/20 text-foreground/70"}`}>
+                <Icon size={18} />
+              </span>
+              <span className="flex-1">
+                <span className="block font-display text-base uppercase tracking-wide">{label}</span>
+                <span className="block font-mono text-[10px] uppercase tracking-widest text-foreground/50">{sub}</span>
+              </span>
+              <span className={`grid h-5 w-5 place-items-center rounded-full border ${active ? "border-primary bg-primary text-primary-foreground" : "border-white/30"}`}>
+                {active && <Check size={12} />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {data.paymentMethod === "card" && (
+        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
+          <Field
+            label="Card Number *"
+            value={data.cardNumber}
+            onChange={(v) => setData({ ...data, cardNumber: formatCardNumber(v) })}
+            error={errors.cardNumber}
+            autoComplete="cc-number"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Expiry MM/YY *"
+              value={data.cardExp}
+              onChange={(v) => setData({ ...data, cardExp: formatExp(v) })}
+              error={errors.cardExp}
+              autoComplete="cc-exp"
+            />
+            <Field
+              label="CVC *"
+              value={data.cardCvc}
+              onChange={(v) => setData({ ...data, cardCvc: v.replace(/\D/g, "").slice(0, 4) })}
+              error={errors.cardCvc}
+              autoComplete="cc-csc"
+            />
+          </div>
+          <Field
+            label="Name on Card *"
+            value={data.cardName}
+            onChange={(v) => setData({ ...data, cardName: v })}
+            error={errors.cardName}
+            autoComplete="cc-name"
+          />
+        </div>
+      )}
+
+      {data.paymentMethod === "apple_pay" && (
+        <div className="grid gap-2 border border-white/10 bg-white/[0.03] p-4 text-center">
+          <div className="mx-auto grid h-12 w-20 place-items-center rounded-md bg-white font-display text-sm text-black"> Pay</div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
+            You'll confirm with Touch ID / Face ID after placing the order.
+          </p>
+        </div>
+      )}
+
+      {data.paymentMethod === "cash_app" && (
+        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
+          <Field
+            label="Your $Cashtag *"
+            value={data.cashTag}
+            onChange={(v) => setData({ ...data, cashTag: v.slice(0, 22) })}
+            error={errors.cashTag}
+            autoComplete="off"
+          />
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
+            We'll send a Cash App payment request after order confirmation.
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
