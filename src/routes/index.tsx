@@ -1052,6 +1052,18 @@ function CheckoutDialog({
         if (!data.billing[f].trim()) errs[`b_${f}`] = "Required";
       });
     }
+    if (s === "payment") {
+      if (data.paymentMethod === "card") {
+        const digits = data.cardNumber.replace(/\D/g, "");
+        if (digits.length < 13 || digits.length > 19) errs.cardNumber = "Valid card number required";
+        if (!/^\d{2}\s*\/\s*\d{2}$/.test(data.cardExp.trim())) errs.cardExp = "MM/YY";
+        if (!/^\d{3,4}$/.test(data.cardCvc.trim())) errs.cardCvc = "CVC";
+        if (data.cardName.trim().length < 2) errs.cardName = "Name on card";
+      }
+      if (data.paymentMethod === "cash_app") {
+        if (!/^\$?[A-Za-z][A-Za-z0-9_]{1,19}$/.test(data.cashTag.trim())) errs.cashTag = "Valid $Cashtag required";
+      }
+    }
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -1060,17 +1072,25 @@ function CheckoutDialog({
     if (!validateStep(step)) return;
     if (step === "contact") setStep("shipping");
     else if (step === "shipping") setStep("billing");
-    else if (step === "billing") setStep("review");
+    else if (step === "billing") setStep("payment");
+    else if (step === "payment") setStep("review");
   };
   const back = () => {
     if (step === "shipping") setStep("contact");
     else if (step === "billing") setStep("shipping");
-    else if (step === "review") setStep("billing");
+    else if (step === "payment") setStep("billing");
+    else if (step === "review") setStep("payment");
   };
 
   const submit = async () => {
     setStep("submitting"); setSubmitError("");
     const billing = data.sameAsBilling ? data.shipping : data.billing;
+    const paymentLabel = data.paymentMethod === "card"
+      ? `Card ending ${data.cardNumber.replace(/\D/g, "").slice(-4)} (${data.cardName.trim()}, exp ${data.cardExp.trim()})`
+      : data.paymentMethod === "apple_pay"
+        ? "Apple Pay"
+        : `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`;
+    const notesWithPayment = `[Payment: ${paymentLabel}]${data.notes.trim() ? "\n" + data.notes.trim() : ""}`;
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-order", {
         body: {
@@ -1081,7 +1101,7 @@ function CheckoutDialog({
           billingAddress: billing,
           items: cart.map((c) => ({ id: c.id, name: c.name, brand: c.brand, size: c.selectedSize, color: c.selectedColor, price: c.price })),
           totalCents: total * 100,
-          notes: data.notes.trim(),
+          notes: notesWithPayment,
         },
       });
       if (error) throw error;
@@ -1096,7 +1116,7 @@ function CheckoutDialog({
     }
   };
 
-  const stepIndex = { contact: 0, shipping: 1, billing: 2, review: 3, submitting: 3, done: 4 }[step];
+  const stepIndex: number = { contact: 0, shipping: 1, billing: 2, payment: 3, review: 4, submitting: 4, done: 5 }[step];
 
   return (
     <AnimatePresence>
