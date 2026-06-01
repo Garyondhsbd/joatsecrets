@@ -209,6 +209,38 @@ function SpaceBackdrop() {
   );
 }
 
+/* ---------- Cinematic red thunder backdrop ---------- */
+function CinematicThunder() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden mix-blend-screen">
+      <div className="thunder-vignette absolute inset-0" />
+      <div className="thunder-flash thunder-flash-1 absolute inset-0" />
+      <div className="thunder-flash thunder-flash-2 absolute inset-0" />
+      <svg className="thunder-bolt thunder-bolt-1 absolute" viewBox="0 0 100 400" preserveAspectRatio="none">
+        <path d="M55 0 L40 140 L60 150 L30 280 L52 290 L20 400" fill="none" stroke="url(#tg1)" strokeWidth="2" strokeLinejoin="miter" strokeLinecap="round" />
+        <defs>
+          <linearGradient id="tg1" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ff3b5c" stopOpacity="1" />
+            <stop offset="60%" stopColor="#c8102e" stopOpacity="1" />
+            <stop offset="100%" stopColor="#7a0a1f" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <svg className="thunder-bolt thunder-bolt-2 absolute" viewBox="0 0 100 400" preserveAspectRatio="none">
+        <path d="M50 0 L65 130 L40 145 L70 270 L45 285 L75 400" fill="none" stroke="url(#tg2)" strokeWidth="2" strokeLinejoin="miter" strokeLinecap="round" />
+        <defs>
+          <linearGradient id="tg2" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ff5570" stopOpacity="1" />
+            <stop offset="60%" stopColor="#c8102e" stopOpacity="1" />
+            <stop offset="100%" stopColor="#7a0a1f" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
+
 function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
   const lockedRef = useRef(false);
   const enterVault = () => {
