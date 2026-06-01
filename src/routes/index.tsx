@@ -128,6 +128,7 @@ function Index() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-background text-foreground">
       <SpaceBackdrop />
+      <CinematicThunder />
       <AnimatePresence mode="wait">
         {!unlocked ? (
           <RestrictedGateway key="gate" onUnlock={() => setUnlocked(true)} />
@@ -207,6 +208,38 @@ function SpaceBackdrop() {
     </div>
   );
 }
+
+/* ---------- Cinematic red thunder backdrop ---------- */
+function CinematicThunder() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden mix-blend-screen">
+      <div className="thunder-vignette absolute inset-0" />
+      <div className="thunder-flash thunder-flash-1 absolute inset-0" />
+      <div className="thunder-flash thunder-flash-2 absolute inset-0" />
+      <svg className="thunder-bolt thunder-bolt-1 absolute" viewBox="0 0 100 400" preserveAspectRatio="none">
+        <path d="M55 0 L40 140 L60 150 L30 280 L52 290 L20 400" fill="none" stroke="url(#tg1)" strokeWidth="2" strokeLinejoin="miter" strokeLinecap="round" />
+        <defs>
+          <linearGradient id="tg1" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ff3b5c" stopOpacity="1" />
+            <stop offset="60%" stopColor="#c8102e" stopOpacity="1" />
+            <stop offset="100%" stopColor="#7a0a1f" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <svg className="thunder-bolt thunder-bolt-2 absolute" viewBox="0 0 100 400" preserveAspectRatio="none">
+        <path d="M50 0 L65 130 L40 145 L70 270 L45 285 L75 400" fill="none" stroke="url(#tg2)" strokeWidth="2" strokeLinejoin="miter" strokeLinecap="round" />
+        <defs>
+          <linearGradient id="tg2" x1="0" x2="0" y1="0" y2="1">
+            <stop offset="0%" stopColor="#ff5570" stopOpacity="1" />
+            <stop offset="60%" stopColor="#c8102e" stopOpacity="1" />
+            <stop offset="100%" stopColor="#7a0a1f" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+  );
+}
+
 
 function RestrictedGateway({ onUnlock }: { onUnlock: () => void }) {
   const lockedRef = useRef(false);
@@ -1060,9 +1093,7 @@ function CheckoutDialog({
         if (!/^\d{3,4}$/.test(data.cardCvc.trim())) errs.cardCvc = "CVC";
         if (data.cardName.trim().length < 2) errs.cardName = "Name on card";
       }
-      if (data.paymentMethod === "cash_app") {
-        if (!/^\$?[A-Za-z][A-Za-z0-9_]{1,19}$/.test(data.cashTag.trim())) errs.cashTag = "Valid $Cashtag required";
-      }
+      // cash_app and apple_pay are handled via external deep links — no in-form fields to validate.
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
@@ -1088,8 +1119,8 @@ function CheckoutDialog({
     const paymentLabel = data.paymentMethod === "card"
       ? `Card ending ${data.cardNumber.replace(/\D/g, "").slice(-4)} (${data.cardName.trim()}, exp ${data.cardExp.trim()})`
       : data.paymentMethod === "apple_pay"
-        ? "Apple Pay"
-        : `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`;
+        ? "Apple Pay → 817-475-8594 (iMessage Apple Cash)"
+        : "Cash App → $thegraysonn";
     const notesWithPayment = `[Payment: ${paymentLabel}]${data.notes.trim() ? "\n" + data.notes.trim() : ""}`;
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-order", {
@@ -1188,7 +1219,7 @@ function CheckoutDialog({
                 </div>
               )}
               {step === "payment" && (
-                <PaymentPanel data={data} setData={setData} errors={errors} />
+                <PaymentPanel data={data} setData={setData} errors={errors} total={total} />
               )}
               {step === "review" && (
                 <ReviewPanel data={data} cart={cart} total={total} submitError={submitError} />
@@ -1325,8 +1356,8 @@ function ReviewPanel({
           <h4 className="mb-1 font-display text-base uppercase">Payment</h4>
           <p className="normal-case text-foreground/80">
             {data.paymentMethod === "card" && `Card ending •••• ${data.cardNumber.replace(/\D/g, "").slice(-4) || "----"}`}
-            {data.paymentMethod === "apple_pay" && "Apple Pay"}
-            {data.paymentMethod === "cash_app" && `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`}
+            {data.paymentMethod === "apple_pay" && "Apple Pay → 817-475-8594"}
+            {data.paymentMethod === "cash_app" && "Cash App → $thegraysonn"}
           </p>
         </div>
         {data.notes && (
@@ -1355,16 +1386,17 @@ function AddressLine({ a }: { a: AddressData }) {
 
 /* ---------- Payment method selection ---------- */
 function PaymentPanel({
-  data, setData, errors,
+  data, setData, errors, total,
 }: {
   data: CheckoutData;
   setData: (d: CheckoutData) => void;
   errors: Record<string, string>;
+  total: number;
 }) {
   const methods: Array<{ id: PaymentMethod; label: string; sub: string; Icon: typeof CreditCard }> = [
     { id: "card", label: "Credit / Debit Card", sub: "Visa · Mastercard · Amex", Icon: CreditCard },
-    { id: "apple_pay", label: "Apple Pay", sub: "Touch / Face ID on supported devices", Icon: Smartphone },
-    { id: "cash_app", label: "Cash App", sub: "Pay with your $Cashtag", Icon: DollarSign },
+    { id: "apple_pay", label: "Apple Pay", sub: "Send via iMessage Apple Cash", Icon: Smartphone },
+    { id: "cash_app", label: "Cash App", sub: "Auto-pay $thegraysonn", Icon: DollarSign },
   ];
   const formatCardNumber = (v: string) =>
     v.replace(/\D/g, "").slice(0, 19).replace(/(.{4})/g, "$1 ").trim();
@@ -1439,25 +1471,43 @@ function PaymentPanel({
       )}
 
       {data.paymentMethod === "apple_pay" && (
-        <div className="grid gap-2 border border-white/10 bg-white/[0.03] p-4 text-center">
-          <div className="mx-auto grid h-12 w-20 place-items-center rounded-md bg-white font-display text-sm text-black"> Pay</div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
-            You'll confirm with Touch ID / Face ID after placing the order.
+        <div className="grid gap-3 border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5 text-center">
+          <div className="mx-auto grid h-12 w-24 place-items-center rounded-md bg-white font-display text-base tracking-tight text-black">
+             Pay
+          </div>
+          <p className="font-display text-2xl uppercase leading-none">${total}</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/70">
+            Send Apple Cash via iMessage to
+          </p>
+          <p className="font-display text-xl tracking-wider text-vault-crimson">817-475-8594</p>
+          <a
+            href={`sms:+18174758594&body=${encodeURIComponent(`Apple Pay $${total} for JOAT Vault order — ${data.fullName || ""}`)}`}
+            className="haptic mt-1 inline-flex h-12 items-center justify-center gap-2 border border-vault-crimson bg-vault-crimson font-display uppercase tracking-wide text-primary-foreground shadow-vault-glow transition hover:bg-vault-wire"
+          >
+            <Smartphone size={16} /> Open Messages → Send ${total}
+          </a>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+            In Messages, tap the Apple Pay icon to send. Then place your order.
           </p>
         </div>
       )}
 
       {data.paymentMethod === "cash_app" && (
-        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
-          <Field
-            label="Your $Cashtag *"
-            value={data.cashTag}
-            onChange={(v) => setData({ ...data, cashTag: v.slice(0, 22) })}
-            error={errors.cashTag}
-            autoComplete="off"
-          />
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
-            We'll send a Cash App payment request after order confirmation.
+        <div className="grid gap-3 border border-white/10 bg-gradient-to-br from-[#00d54b]/10 to-white/[0.02] p-5 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#00d54b] font-display text-2xl text-black">$</div>
+          <p className="font-display text-2xl uppercase leading-none">${total}</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/70">Paying directly to</p>
+          <p className="font-display text-xl tracking-wider text-[#00d54b]">$thegraysonn</p>
+          <a
+            href={`https://cash.app/$thegraysonn/${total}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="haptic mt-1 inline-flex h-12 items-center justify-center gap-2 border border-[#00d54b] bg-[#00d54b] font-display uppercase tracking-wide text-black transition hover:brightness-110"
+          >
+            <DollarSign size={16} /> Pay ${total} on Cash App
+          </a>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+            Opens Cash App with the amount pre-filled. Complete the payment, then place your order.
           </p>
         </div>
       )}
