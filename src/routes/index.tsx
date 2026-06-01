@@ -1323,8 +1323,8 @@ function ReviewPanel({
           <h4 className="mb-1 font-display text-base uppercase">Payment</h4>
           <p className="normal-case text-foreground/80">
             {data.paymentMethod === "card" && `Card ending •••• ${data.cardNumber.replace(/\D/g, "").slice(-4) || "----"}`}
-            {data.paymentMethod === "apple_pay" && "Apple Pay"}
-            {data.paymentMethod === "cash_app" && `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`}
+            {data.paymentMethod === "apple_pay" && "Apple Pay → 817-475-8594"}
+            {data.paymentMethod === "cash_app" && "Cash App → $thegraysonn"}
           </p>
         </div>
         {data.notes && (
