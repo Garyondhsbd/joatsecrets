@@ -1321,6 +1321,14 @@ function ReviewPanel({
           <h4 className="mb-1 font-display text-base uppercase">Bill To</h4>
           <AddressLine a={billing} />
         </div>
+        <div className="sm:col-span-2">
+          <h4 className="mb-1 font-display text-base uppercase">Payment</h4>
+          <p className="normal-case text-foreground/80">
+            {data.paymentMethod === "card" && `Card ending •••• ${data.cardNumber.replace(/\D/g, "").slice(-4) || "----"}`}
+            {data.paymentMethod === "apple_pay" && "Apple Pay"}
+            {data.paymentMethod === "cash_app" && `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`}
+          </p>
+        </div>
         {data.notes && (
           <div>
             <h4 className="mb-1 font-display text-base uppercase">Notes</h4>
