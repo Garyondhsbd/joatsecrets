@@ -35,6 +35,7 @@ interface AddressData {
   postal: string;
   country: string;
 }
+type PaymentMethod = "card" | "apple_pay" | "cash_app";
 interface CheckoutData {
   fullName: string;
   email: string;
@@ -43,6 +44,12 @@ interface CheckoutData {
   billing: AddressData;
   sameAsBilling: boolean;
   notes: string;
+  paymentMethod: PaymentMethod;
+  cardNumber: string;
+  cardExp: string;
+  cardCvc: string;
+  cardName: string;
+  cashTag: string;
 }
 
 const ACCESS_KEY = "joat-vault-access-2026";
@@ -54,6 +61,9 @@ const emptyCheckout: CheckoutData = {
   fullName: "", email: "", phone: "",
   shipping: { ...emptyAddress }, billing: { ...emptyAddress },
   sameAsBilling: true, notes: "",
+  paymentMethod: "card",
+  cardNumber: "", cardExp: "", cardCvc: "", cardName: "",
+  cashTag: "",
 };
 
 const productSections = [
