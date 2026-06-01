@@ -1353,6 +1353,118 @@ function AddressLine({ a }: { a: AddressData }) {
   );
 }
 
+/* ---------- Payment method selection ---------- */
+function PaymentPanel({
+  data, setData, errors,
+}: {
+  data: CheckoutData;
+  setData: (d: CheckoutData) => void;
+  errors: Record<string, string>;
+}) {
+  const methods: Array<{ id: PaymentMethod; label: string; sub: string; Icon: typeof CreditCard }> = [
+    { id: "card", label: "Credit / Debit Card", sub: "Visa · Mastercard · Amex", Icon: CreditCard },
+    { id: "apple_pay", label: "Apple Pay", sub: "Touch / Face ID on supported devices", Icon: Smartphone },
+    { id: "cash_app", label: "Cash App", sub: "Pay with your $Cashtag", Icon: DollarSign },
+  ];
+  const formatCardNumber = (v: string) =>
+    v.replace(/\D/g, "").slice(0, 19).replace(/(.{4})/g, "$1 ").trim();
+  const formatExp = (v: string) => {
+    const d = v.replace(/\D/g, "").slice(0, 4);
+    return d.length <= 2 ? d : `${d.slice(0, 2)}/${d.slice(2)}`;
+  };
+
+  return (
+    <div className="grid gap-4">
+      <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">Payment Method</p>
+      <div className="grid gap-2">
+        {methods.map(({ id, label, sub, Icon }) => {
+          const active = data.paymentMethod === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setData({ ...data, paymentMethod: id })}
+              className={`flex items-center gap-3 border p-3 text-left transition ${
+                active ? "border-primary bg-primary/10 shadow-[0_0_20px_-8px_rgba(255,40,60,0.6)]" : "border-white/15 bg-white/5 hover:border-white/30"
+              }`}
+            >
+              <span className={`grid h-10 w-10 place-items-center border ${active ? "border-primary text-primary" : "border-white/20 text-foreground/70"}`}>
+                <Icon size={18} />
+              </span>
+              <span className="flex-1">
+                <span className="block font-display text-base uppercase tracking-wide">{label}</span>
+                <span className="block font-mono text-[10px] uppercase tracking-widest text-foreground/50">{sub}</span>
+              </span>
+              <span className={`grid h-5 w-5 place-items-center rounded-full border ${active ? "border-primary bg-primary text-primary-foreground" : "border-white/30"}`}>
+                {active && <Check size={12} />}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      {data.paymentMethod === "card" && (
+        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
+          <Field
+            label="Card Number *"
+            value={data.cardNumber}
+            onChange={(v) => setData({ ...data, cardNumber: formatCardNumber(v) })}
+            error={errors.cardNumber}
+            autoComplete="cc-number"
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Field
+              label="Expiry MM/YY *"
+              value={data.cardExp}
+              onChange={(v) => setData({ ...data, cardExp: formatExp(v) })}
+              error={errors.cardExp}
+              autoComplete="cc-exp"
+            />
+            <Field
+              label="CVC *"
+              value={data.cardCvc}
+              onChange={(v) => setData({ ...data, cardCvc: v.replace(/\D/g, "").slice(0, 4) })}
+              error={errors.cardCvc}
+              autoComplete="cc-csc"
+            />
+          </div>
+          <Field
+            label="Name on Card *"
+            value={data.cardName}
+            onChange={(v) => setData({ ...data, cardName: v })}
+            error={errors.cardName}
+            autoComplete="cc-name"
+          />
+        </div>
+      )}
+
+      {data.paymentMethod === "apple_pay" && (
+        <div className="grid gap-2 border border-white/10 bg-white/[0.03] p-4 text-center">
+          <div className="mx-auto grid h-12 w-20 place-items-center rounded-md bg-white font-display text-sm text-black"> Pay</div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
+            You'll confirm with Touch ID / Face ID after placing the order.
+          </p>
+        </div>
+      )}
+
+      {data.paymentMethod === "cash_app" && (
+        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
+          <Field
+            label="Your $Cashtag *"
+            value={data.cashTag}
+            onChange={(v) => setData({ ...data, cashTag: v.slice(0, 22) })}
+            error={errors.cashTag}
+            autoComplete="off"
+          />
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
+            We'll send a Cash App payment request after order confirmation.
+          </p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ---------- Terms of Service modal ---------- */
 function TosModal({
   open, onAccept, dismissible, onDismiss,
