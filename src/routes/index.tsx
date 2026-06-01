@@ -1438,25 +1438,43 @@ function PaymentPanel({
       )}
 
       {data.paymentMethod === "apple_pay" && (
-        <div className="grid gap-2 border border-white/10 bg-white/[0.03] p-4 text-center">
-          <div className="mx-auto grid h-12 w-20 place-items-center rounded-md bg-white font-display text-sm text-black"> Pay</div>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
-            You'll confirm with Touch ID / Face ID after placing the order.
+        <div className="grid gap-3 border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5 text-center">
+          <div className="mx-auto grid h-12 w-24 place-items-center rounded-md bg-white font-display text-base tracking-tight text-black">
+             Pay
+          </div>
+          <p className="font-display text-2xl uppercase leading-none">${total}</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/70">
+            Send Apple Cash via iMessage to
+          </p>
+          <p className="font-display text-xl tracking-wider text-vault-crimson">817-475-8594</p>
+          <a
+            href={`sms:+18174758594&body=${encodeURIComponent(`Apple Pay $${total} for JOAT Vault order — ${data.fullName || ""}`)}`}
+            className="haptic mt-1 inline-flex h-12 items-center justify-center gap-2 border border-vault-crimson bg-vault-crimson font-display uppercase tracking-wide text-primary-foreground shadow-vault-glow transition hover:bg-vault-wire"
+          >
+            <Smartphone size={16} /> Open Messages → Send ${total}
+          </a>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+            In Messages, tap the Apple Pay icon to send. Then place your order.
           </p>
         </div>
       )}
 
       {data.paymentMethod === "cash_app" && (
-        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
-          <Field
-            label="Your $Cashtag *"
-            value={data.cashTag}
-            onChange={(v) => setData({ ...data, cashTag: v.slice(0, 22) })}
-            error={errors.cashTag}
-            autoComplete="off"
-          />
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">
-            We'll send a Cash App payment request after order confirmation.
+        <div className="grid gap-3 border border-white/10 bg-gradient-to-br from-[#00d54b]/10 to-white/[0.02] p-5 text-center">
+          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#00d54b] font-display text-2xl text-black">$</div>
+          <p className="font-display text-2xl uppercase leading-none">${total}</p>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/70">Paying directly to</p>
+          <p className="font-display text-xl tracking-wider text-[#00d54b]">$thegraysonn</p>
+          <a
+            href={`https://cash.app/$thegraysonn/${total}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="haptic mt-1 inline-flex h-12 items-center justify-center gap-2 border border-[#00d54b] bg-[#00d54b] font-display uppercase tracking-wide text-black transition hover:brightness-110"
+          >
+            <DollarSign size={16} /> Pay ${total} on Cash App
+          </a>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+            Opens Cash App with the amount pre-filled. Complete the payment, then place your order.
           </p>
         </div>
       )}
