@@ -1060,9 +1060,7 @@ function CheckoutDialog({
         if (!/^\d{3,4}$/.test(data.cardCvc.trim())) errs.cardCvc = "CVC";
         if (data.cardName.trim().length < 2) errs.cardName = "Name on card";
       }
-      if (data.paymentMethod === "cash_app") {
-        if (!/^\$?[A-Za-z][A-Za-z0-9_]{1,19}$/.test(data.cashTag.trim())) errs.cashTag = "Valid $Cashtag required";
-      }
+      // cash_app and apple_pay are handled via external deep links — no in-form fields to validate.
     }
     setErrors(errs);
     return Object.keys(errs).length === 0;
