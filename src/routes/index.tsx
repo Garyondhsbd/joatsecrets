@@ -1353,16 +1353,17 @@ function AddressLine({ a }: { a: AddressData }) {
 
 /* ---------- Payment method selection ---------- */
 function PaymentPanel({
-  data, setData, errors,
+  data, setData, errors, total,
 }: {
   data: CheckoutData;
   setData: (d: CheckoutData) => void;
   errors: Record<string, string>;
+  total: number;
 }) {
   const methods: Array<{ id: PaymentMethod; label: string; sub: string; Icon: typeof CreditCard }> = [
     { id: "card", label: "Credit / Debit Card", sub: "Visa · Mastercard · Amex", Icon: CreditCard },
-    { id: "apple_pay", label: "Apple Pay", sub: "Touch / Face ID on supported devices", Icon: Smartphone },
-    { id: "cash_app", label: "Cash App", sub: "Pay with your $Cashtag", Icon: DollarSign },
+    { id: "apple_pay", label: "Apple Pay", sub: "Send via iMessage Apple Cash", Icon: Smartphone },
+    { id: "cash_app", label: "Cash App", sub: "Auto-pay $thegraysonn", Icon: DollarSign },
   ];
   const formatCardNumber = (v: string) =>
     v.replace(/\D/g, "").slice(0, 19).replace(/(.{4})/g, "$1 ").trim();
