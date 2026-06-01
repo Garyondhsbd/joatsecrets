@@ -1016,7 +1016,7 @@ function CartDrawer({
 }
 
 /* ---------- Multi-step checkout dialog ---------- */
-type CheckoutStep = "contact" | "shipping" | "billing" | "review" | "submitting" | "done";
+type CheckoutStep = "contact" | "shipping" | "billing" | "payment" | "review" | "submitting" | "done";
 
 function CheckoutDialog({
   open, cart, total, onClose, onComplete,
