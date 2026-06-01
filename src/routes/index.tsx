@@ -1086,8 +1086,8 @@ function CheckoutDialog({
     const paymentLabel = data.paymentMethod === "card"
       ? `Card ending ${data.cardNumber.replace(/\D/g, "").slice(-4)} (${data.cardName.trim()}, exp ${data.cardExp.trim()})`
       : data.paymentMethod === "apple_pay"
-        ? "Apple Pay"
-        : `Cash App ${data.cashTag.trim().startsWith("$") ? data.cashTag.trim() : "$" + data.cashTag.trim()}`;
+        ? "Apple Pay → 817-475-8594 (iMessage Apple Cash)"
+        : "Cash App → $thegraysonn";
     const notesWithPayment = `[Payment: ${paymentLabel}]${data.notes.trim() ? "\n" + data.notes.trim() : ""}`;
     try {
       const { data: res, error } = await supabase.functions.invoke("submit-order", {
