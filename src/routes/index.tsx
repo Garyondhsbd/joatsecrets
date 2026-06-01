@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import {
   Pause, Play, Search, ShoppingBag, Truck, Shield, Package, X, Menu, Send,
   MessageCircle, Loader2, Check, ChevronRight, ChevronLeft,
+  CreditCard, Smartphone, DollarSign,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
