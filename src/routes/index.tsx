@@ -1145,7 +1145,7 @@ function CheckoutDialog({
 
             <div className="border-b border-white/10 p-4">
               <ol className="flex items-center gap-2 font-mono text-[10px] uppercase tracking-widest">
-                {["Contact", "Ship", "Bill", "Review", "Done"].map((label, i) => (
+                {["Contact", "Ship", "Bill", "Pay", "Review", "Done"].map((label, i) => (
                   <li key={label} className="flex flex-1 items-center gap-2">
                     <span className={`grid h-6 w-6 place-items-center border ${i <= stepIndex ? "border-primary bg-primary text-primary-foreground" : "border-white/20 text-foreground/40"}`}>
                       {i < stepIndex ? <Check size={12} /> : i + 1}
