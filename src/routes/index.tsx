@@ -1187,6 +1187,9 @@ function CheckoutDialog({
                   </div>
                 </div>
               )}
+              {step === "payment" && (
+                <PaymentPanel data={data} setData={setData} errors={errors} />
+              )}
               {step === "review" && (
                 <ReviewPanel data={data} cart={cart} total={total} submitError={submitError} />
               )}
