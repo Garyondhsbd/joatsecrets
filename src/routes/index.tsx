@@ -50,6 +50,7 @@ interface CheckoutData {
   cardCvc: string;
   cardName: string;
   cashTag: string;
+  paymentConfirmed: boolean;
 }
 
 const ACCESS_KEY = "joat-vault-access-2026";
