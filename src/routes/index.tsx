@@ -1393,10 +1393,29 @@ function PaymentPanel({
   errors: Record<string, string>;
   total: number;
 }) {
-  const methods: Array<{ id: PaymentMethod; label: string; sub: string; Icon: typeof CreditCard }> = [
-    { id: "card", label: "Credit / Debit Card", sub: "Visa · Mastercard · Amex", Icon: CreditCard },
-    { id: "apple_pay", label: "Apple Pay", sub: "Send via iMessage Apple Cash", Icon: Smartphone },
-    { id: "cash_app", label: "Cash App", sub: "Auto-pay $thegraysonn", Icon: DollarSign },
+  const AppleLogo = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+      <path d="M16.365 1.43c0 1.14-.46 2.23-1.21 3.02-.81.84-2.13 1.49-3.22 1.4-.14-1.11.43-2.27 1.17-3.04.82-.86 2.23-1.5 3.26-1.38zM20.5 17.27c-.55 1.27-.82 1.83-1.53 2.95-.99 1.56-2.39 3.51-4.12 3.52-1.54.02-1.93-1-4.02-.99-2.08.01-2.51 1.01-4.05.99-1.74-.02-3.06-1.77-4.05-3.33C-.04 15.97-.39 10.95 2.04 8.27c1.16-1.28 2.99-2.09 4.71-2.09 1.76 0 2.86 1 4.31 1 1.41 0 2.27-1 4.3-1 1.54 0 3.17.84 4.34 2.29-3.82 2.09-3.2 7.55.8 8.8z" />
+    </svg>
+  );
+  const CashAppLogo = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden {...props}>
+      <path d="M15.71 8.6c.2.2.52.2.72 0l.92-.92a.51.51 0 0 0-.02-.74A6.9 6.9 0 0 0 13.9 5.4l-.32-1.43a.5.5 0 0 0-.49-.39h-1.55a.5.5 0 0 0-.49.39l-.28 1.27c-2.07.18-3.83 1.39-3.83 3.55 0 1.87 1.47 2.68 3.02 3.23l1.46.53c1 .37 1.78.71 1.78 1.5 0 .82-.8 1.32-1.97 1.32-1.07 0-2.19-.36-3.06-1.18a.51.51 0 0 0-.71.01l-1 1c-.2.2-.2.52 0 .72a6.96 6.96 0 0 0 3.27 1.77l.3 1.34a.5.5 0 0 0 .49.39h1.56a.5.5 0 0 0 .49-.4l.29-1.3c2.47-.27 4-1.74 4-3.83 0-1.7-1.06-2.71-3.16-3.49l-1.27-.46c-.94-.34-1.85-.66-1.85-1.4 0-.72.78-1.2 1.84-1.2 1.06 0 2.06.42 2.79 1.11z" />
+    </svg>
+  );
+  const methods: Array<{ id: PaymentMethod; label: string; sub: string; render: (active: boolean) => React.ReactNode }> = [
+    {
+      id: "card", label: "Card", sub: "Visa · Mastercard · Amex · Discover",
+      render: (a) => <CreditCard size={20} className={a ? "text-primary" : "text-foreground/70"} />,
+    },
+    {
+      id: "apple_pay", label: "Apple Pay", sub: "Instant via iMessage Apple Cash",
+      render: (a) => <AppleLogo className={`h-5 w-5 ${a ? "text-primary" : "text-foreground"}`} />,
+    },
+    {
+      id: "cash_app", label: "Cash App", sub: "One-tap pay to $thegraysonn",
+      render: (a) => <CashAppLogo className={`h-5 w-5 ${a ? "text-primary" : "text-[#00d54b]"}`} />,
+    },
   ];
   const formatCardNumber = (v: string) =>
     v.replace(/\D/g, "").slice(0, 19).replace(/(.{4})/g, "$1 ").trim();
@@ -1409,19 +1428,21 @@ function PaymentPanel({
     <div className="grid gap-4">
       <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">Payment Method</p>
       <div className="grid gap-2">
-        {methods.map(({ id, label, sub, Icon }) => {
+        {methods.map(({ id, label, sub, render }) => {
           const active = data.paymentMethod === id;
           return (
             <button
               key={id}
               type="button"
               onClick={() => setData({ ...data, paymentMethod: id })}
-              className={`flex items-center gap-3 border p-3 text-left transition ${
-                active ? "border-primary bg-primary/10 shadow-[0_0_20px_-8px_rgba(255,40,60,0.6)]" : "border-white/15 bg-white/5 hover:border-white/30"
+              className={`flex items-center gap-3 rounded-xl border p-3 text-left transition ${
+                active
+                  ? "border-primary bg-primary/10 shadow-[0_0_24px_-10px_rgba(255,40,60,0.7)]"
+                  : "border-white/10 bg-white/[0.04] hover:border-white/25"
               }`}
             >
-              <span className={`grid h-10 w-10 place-items-center border ${active ? "border-primary text-primary" : "border-white/20 text-foreground/70"}`}>
-                <Icon size={18} />
+              <span className={`grid h-11 w-11 place-items-center rounded-lg border ${active ? "border-primary/60 bg-primary/10" : "border-white/15 bg-black/40"}`}>
+                {render(active)}
               </span>
               <span className="flex-1">
                 <span className="block font-display text-base uppercase tracking-wide">{label}</span>
@@ -1436,7 +1457,7 @@ function PaymentPanel({
       </div>
 
       {data.paymentMethod === "card" && (
-        <div className="grid gap-3 border border-white/10 bg-white/[0.03] p-4">
+        <div className="grid gap-3 rounded-xl border border-white/10 bg-white/[0.03] p-4">
           <Field
             label="Card Number *"
             value={data.cardNumber}
@@ -1471,43 +1492,68 @@ function PaymentPanel({
       )}
 
       {data.paymentMethod === "apple_pay" && (
-        <div className="grid gap-3 border border-white/10 bg-gradient-to-br from-white/[0.06] to-white/[0.02] p-5 text-center">
-          <div className="mx-auto grid h-12 w-24 place-items-center rounded-md bg-white font-display text-base tracking-tight text-black">
-             Pay
+        <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/[0.08] via-white/[0.03] to-transparent p-5">
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/5 blur-3xl" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 rounded-lg bg-black px-3 py-1.5 ring-1 ring-white/20">
+              <AppleLogo className="h-4 w-4 text-white" />
+              <span className="font-display text-sm tracking-tight text-white">Pay</span>
+            </div>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">Apple Cash · iMessage</span>
           </div>
-          <p className="font-display text-2xl uppercase leading-none">${total}</p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/70">
-            Send Apple Cash via iMessage to
-          </p>
-          <p className="font-display text-xl tracking-wider text-vault-crimson">817-475-8594</p>
-          <a
-            href={`sms:+18174758594&body=${encodeURIComponent(`Apple Pay $${total} for JOAT Vault order — ${data.fullName || ""}`)}`}
-            className="haptic mt-1 inline-flex h-12 items-center justify-center gap-2 border border-vault-crimson bg-vault-crimson font-display uppercase tracking-wide text-primary-foreground shadow-vault-glow transition hover:bg-vault-wire"
-          >
-            <Smartphone size={16} /> Open Messages → Send ${total}
-          </a>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-            In Messages, tap the Apple Pay icon to send. Then place your order.
+          <div className="mt-5 flex items-baseline gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">Send</span>
+            <span className="font-display text-3xl tracking-tight">${total.toFixed(2)}</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">to</span>
+          </div>
+          <p className="mt-1 font-display text-lg tracking-wider text-vault-crimson">(817) 475-8594</p>
+          <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <a
+              href={`sms:+18174758594?&body=${encodeURIComponent(`Apple Pay $${total.toFixed(2)} for JOAT Vault order — ${data.fullName || ""}`)}`}
+              className="haptic inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-white font-display uppercase tracking-wide text-black transition hover:bg-white/90"
+            >
+              <AppleLogo className="h-4 w-4" /> Open Messages
+            </a>
+            <button
+              type="button"
+              onClick={() => { navigator.clipboard?.writeText("8174758594"); }}
+              className="haptic inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-white/15 bg-white/[0.04] font-mono text-[11px] uppercase tracking-widest text-foreground/80 transition hover:border-white/30"
+            >
+              Copy Number
+            </button>
+          </div>
+          <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+            In Messages, tap the Apple Pay <span className="text-foreground/80">$</span> icon → send ${total.toFixed(2)} → then place your order below.
           </p>
         </div>
       )}
 
       {data.paymentMethod === "cash_app" && (
-        <div className="grid gap-3 border border-white/10 bg-gradient-to-br from-[#00d54b]/10 to-white/[0.02] p-5 text-center">
-          <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-[#00d54b] font-display text-2xl text-black">$</div>
-          <p className="font-display text-2xl uppercase leading-none">${total}</p>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/70">Paying directly to</p>
-          <p className="font-display text-xl tracking-wider text-[#00d54b]">$thegraysonn</p>
+        <div className="relative overflow-hidden rounded-2xl border border-[#00d54b]/25 bg-gradient-to-br from-[#00d54b]/15 via-[#00d54b]/5 to-transparent p-5">
+          <div className="pointer-events-none absolute -left-10 -bottom-10 h-40 w-40 rounded-full bg-[#00d54b]/20 blur-3xl" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 rounded-lg bg-[#00d54b] px-3 py-1.5">
+              <CashAppLogo className="h-4 w-4 text-black" />
+              <span className="font-display text-sm tracking-tight text-black">Cash App</span>
+            </div>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground/60">One-tap pay</span>
+          </div>
+          <div className="mt-5 flex items-baseline gap-2">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">Send</span>
+            <span className="font-display text-3xl tracking-tight">${total.toFixed(2)}</span>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">to</span>
+          </div>
+          <p className="mt-1 font-display text-lg tracking-wider text-[#00d54b]">$thegraysonn</p>
           <a
-            href={`https://cash.app/$thegraysonn/${total}`}
+            href={`https://cash.app/$thegraysonn/${total.toFixed(2)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="haptic mt-1 inline-flex h-12 items-center justify-center gap-2 border border-[#00d54b] bg-[#00d54b] font-display uppercase tracking-wide text-black transition hover:brightness-110"
+            className="haptic mt-4 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#00d54b] font-display uppercase tracking-wide text-black transition hover:brightness-110"
           >
-            <DollarSign size={16} /> Pay ${total} on Cash App
+            <CashAppLogo className="h-4 w-4" /> Pay ${total.toFixed(2)} Now
           </a>
-          <p className="font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-            Opens Cash App with the amount pre-filled. Complete the payment, then place your order.
+          <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-foreground/50">
+            Opens Cash App with the amount pre-filled. Complete payment → then place your order.
           </p>
         </div>
       )}
