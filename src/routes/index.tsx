@@ -1561,11 +1561,37 @@ function PaymentPanel({
             <CashAppLogo className="h-4 w-4" /> Pay ${total.toFixed(2)} Now
           </a>
           <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-            Opens Cash App with the amount pre-filled. Complete payment → then place your order.
+            Opens Cash App with the amount pre-filled. Complete payment → then confirm below.
           </p>
+          <ConfirmPaid
+            confirmed={data.paymentConfirmed}
+            onToggle={(v) => setData({ ...data, paymentConfirmed: v })}
+            label={`I sent $${total.toFixed(2)} via Cash App`}
+            accent="green"
+          />
         </div>
       )}
     </div>
+  );
+}
+
+function ConfirmPaid({
+  confirmed, onToggle, label, accent,
+}: { confirmed: boolean; onToggle: (v: boolean) => void; label: string; accent: "white" | "green" }) {
+  const ring = accent === "green" ? "border-[#00d54b] bg-[#00d54b] text-black" : "border-white bg-white text-black";
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!confirmed)}
+      className={`haptic mt-3 flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
+        confirmed ? "border-primary bg-primary/10" : "border-white/15 bg-white/[0.04] hover:border-white/30"
+      }`}
+    >
+      <span className={`grid h-6 w-6 place-items-center rounded-full border ${confirmed ? ring : "border-white/30"}`}>
+        {confirmed && <Check size={14} />}
+      </span>
+      <span className="font-mono text-[11px] uppercase tracking-widest text-foreground/85">{label}</span>
+    </button>
   );
 }
 
