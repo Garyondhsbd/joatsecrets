@@ -50,6 +50,7 @@ interface CheckoutData {
   cardCvc: string;
   cardName: string;
   cashTag: string;
+  paymentConfirmed: boolean;
 }
 
 const ACCESS_KEY = "joat-vault-access-2026";
@@ -64,6 +65,7 @@ const emptyCheckout: CheckoutData = {
   paymentMethod: "card",
   cardNumber: "", cardExp: "", cardCvc: "", cardName: "",
   cashTag: "",
+  paymentConfirmed: false,
 };
 
 const productSections = [
@@ -1255,7 +1257,12 @@ function CheckoutDialog({
                 </button>
                 <p className="font-display text-xl uppercase">${total}</p>
                 {step === "review" ? (
-                  <button onClick={submit} className="flex items-center gap-2 bg-primary px-5 py-3 font-display text-base uppercase tracking-widest text-primary-foreground hover:bg-accent">
+                  <button
+                    onClick={submit}
+                    disabled={!data.paymentConfirmed}
+                    className="flex items-center gap-2 bg-primary px-5 py-3 font-display text-base uppercase tracking-widest text-primary-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                    title={!data.paymentConfirmed ? "Confirm payment first" : ""}
+                  >
                     Place Order <Check size={16} />
                   </button>
                 ) : (
@@ -1434,7 +1441,7 @@ function PaymentPanel({
             <button
               key={id}
               type="button"
-              onClick={() => setData({ ...data, paymentMethod: id })}
+              onClick={() => setData({ ...data, paymentMethod: id, paymentConfirmed: id === "card" })}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition ${
                 active
                   ? "border-primary bg-primary/10 shadow-[0_0_24px_-10px_rgba(255,40,60,0.7)]"
@@ -1523,8 +1530,14 @@ function PaymentPanel({
             </button>
           </div>
           <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-            In Messages, tap the Apple Pay <span className="text-foreground/80">$</span> icon → send ${total.toFixed(2)} → then place your order below.
+            In Messages, tap the Apple Pay <span className="text-foreground/80">$</span> icon → send ${total.toFixed(2)} → then confirm below.
           </p>
+          <ConfirmPaid
+            confirmed={data.paymentConfirmed}
+            onToggle={(v) => setData({ ...data, paymentConfirmed: v })}
+            label={`I sent $${total.toFixed(2)} via Apple Pay`}
+            accent="white"
+          />
         </div>
       )}
 
@@ -1553,11 +1566,37 @@ function PaymentPanel({
             <CashAppLogo className="h-4 w-4" /> Pay ${total.toFixed(2)} Now
           </a>
           <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-            Opens Cash App with the amount pre-filled. Complete payment → then place your order.
+            Opens Cash App with the amount pre-filled. Complete payment → then confirm below.
           </p>
+          <ConfirmPaid
+            confirmed={data.paymentConfirmed}
+            onToggle={(v) => setData({ ...data, paymentConfirmed: v })}
+            label={`I sent $${total.toFixed(2)} via Cash App`}
+            accent="green"
+          />
         </div>
       )}
     </div>
+  );
+}
+
+function ConfirmPaid({
+  confirmed, onToggle, label, accent,
+}: { confirmed: boolean; onToggle: (v: boolean) => void; label: string; accent: "white" | "green" }) {
+  const ring = accent === "green" ? "border-[#00d54b] bg-[#00d54b] text-black" : "border-white bg-white text-black";
+  return (
+    <button
+      type="button"
+      onClick={() => onToggle(!confirmed)}
+      className={`haptic mt-3 flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
+        confirmed ? "border-primary bg-primary/10" : "border-white/15 bg-white/[0.04] hover:border-white/30"
+      }`}
+    >
+      <span className={`grid h-6 w-6 place-items-center rounded-full border ${confirmed ? ring : "border-white/30"}`}>
+        {confirmed && <Check size={14} />}
+      </span>
+      <span className="font-mono text-[11px] uppercase tracking-widest text-foreground/85">{label}</span>
+    </button>
   );
 }
 
