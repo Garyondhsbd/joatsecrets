@@ -1436,7 +1436,7 @@ function PaymentPanel({
             <button
               key={id}
               type="button"
-              onClick={() => setData({ ...data, paymentMethod: id })}
+              onClick={() => setData({ ...data, paymentMethod: id, paymentConfirmed: id === "card" })}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition ${
                 active
                   ? "border-primary bg-primary/10 shadow-[0_0_24px_-10px_rgba(255,40,60,0.7)]"
