@@ -65,6 +65,7 @@ const emptyCheckout: CheckoutData = {
   paymentMethod: "card",
   cardNumber: "", cardExp: "", cardCvc: "", cardName: "",
   cashTag: "",
+  paymentConfirmed: false,
 };
 
 const productSections = [
