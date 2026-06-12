@@ -1257,7 +1257,12 @@ function CheckoutDialog({
                 </button>
                 <p className="font-display text-xl uppercase">${total}</p>
                 {step === "review" ? (
-                  <button onClick={submit} className="flex items-center gap-2 bg-primary px-5 py-3 font-display text-base uppercase tracking-widest text-primary-foreground hover:bg-accent">
+                  <button
+                    onClick={submit}
+                    disabled={!data.paymentConfirmed}
+                    className="flex items-center gap-2 bg-primary px-5 py-3 font-display text-base uppercase tracking-widest text-primary-foreground transition hover:bg-accent disabled:cursor-not-allowed disabled:opacity-40"
+                    title={!data.paymentConfirmed ? "Confirm payment first" : ""}
+                  >
                     Place Order <Check size={16} />
                   </button>
                 ) : (
