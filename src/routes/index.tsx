@@ -1525,8 +1525,14 @@ function PaymentPanel({
             </button>
           </div>
           <p className="mt-3 font-mono text-[10px] uppercase tracking-widest text-foreground/50">
-            In Messages, tap the Apple Pay <span className="text-foreground/80">$</span> icon → send ${total.toFixed(2)} → then place your order below.
+            In Messages, tap the Apple Pay <span className="text-foreground/80">$</span> icon → send ${total.toFixed(2)} → then confirm below.
           </p>
+          <ConfirmPaid
+            confirmed={data.paymentConfirmed}
+            onToggle={(v) => setData({ ...data, paymentConfirmed: v })}
+            label={`I sent $${total.toFixed(2)} via Apple Pay`}
+            accent="white"
+          />
         </div>
       )}
 
